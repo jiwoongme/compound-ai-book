@@ -1,0 +1,43 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "예측 모델을 넘어 자율 에이전트로",
+    "section": "",
+    "text": "서문: 데이터 사이언티스트를 위한 에이전트 엔지니어링\n본 기술 블로그 및 집필 프로젝트는 전통적인 머신러닝/딥러닝(예측·이상탐지) 모델링 자산을 거대언어모델(LLM) 에이전트 아키텍처와 결합하는 복합 AI 시스템(Compound AI Systems) 설계와 정량적 신뢰성 평가(Agent Evals)를 다룹니다.",
+    "crumbs": [
+      "서문: 데이터 사이언티스트를 위한 에이전트 엔지니어링"
+    ]
+  },
+  {
+    "objectID": "index.html#연재-및-구성-안내",
+    "href": "index.html#연재-및-구성-안내",
+    "title": "예측 모델을 넘어 자율 에이전트로",
+    "section": "연재 및 구성 안내",
+    "text": "연재 및 구성 안내\n\nPart 1. 아키텍처의 재정의: 단일 모델에서 복합 AI 시스템으로\nPart 2. Agent-Ready Data: 에이전트의 지능을 결정하는 데이터 구조화 공학\nPart 3. 하이브리드 인텔리전스: 예측·판별 모델(ML/DL)과 에이전트의 결합\nPart 4. Agent Evals & Reliability: 확률론적 시스템을 통제하는 신뢰성 공학\nPart 5. 엔드투엔드 캡스톤: 자율 이상 감지 및 원인 진단 에이전트 구축",
+    "crumbs": [
+      "서문: 데이터 사이언티스트를 위한 에이전트 엔지니어링"
+    ]
+  },
+  {
+    "objectID": "part1/post01_why_compound_ai.html",
+    "href": "part1/post01_why_compound_ai.html",
+    "title": "1  왜 거대언어모델(LLM) 하나로는 엔터프라이즈 문제를 풀 수 없는가?",
+    "section": "",
+    "text": "첫 번째 아티클 초안이 작성될 공간입니다.",
+    "crumbs": [
+      "Part 1. 단일 모델에서 복합 AI 시스템으로",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>왜 거대언어모델(LLM) 하나로는 엔터프라이즈 문제를 풀 수 없는가?</span>"
+    ]
+  },
+  {
+    "objectID": "references.html",
+    "href": "references.html",
+    "title": "참고문헌 (References)",
+    "section": "",
+    "text": "본 시리즈에서 인용한 주요 학술 논문 및 기술 보고서 목록입니다.",
+    "crumbs": [
+      "참고문헌 (References)"
+    ]
+  }
+]
