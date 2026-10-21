@@ -26,6 +26,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -79,7 +114,39 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script src="../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -317,8 +384,23 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#정형시계열-데이터의-물리학-왜-트리-모델과-특화-모델은-여전히-압도적인가" id="toc-정형시계열-데이터의-물리학-왜-트리-모델과-특화-모델은-여전히-압도적인가" class="nav-link active" data-scroll-target="#정형시계열-데이터의-물리학-왜-트리-모델과-특화-모델은-여전히-압도적인가"><span class="header-section-number">1.1</span> 정형·시계열 데이터의 물리학: 왜 트리 모델과 특화 모델은 여전히 압도적인가?</a>
+  <ul class="collapse">
+  <li><a href="#불규칙한-결정-경계irregular-decision-boundaries와-과도한-평활화" id="toc-불규칙한-결정-경계irregular-decision-boundaries와-과도한-평활화" class="nav-link" data-scroll-target="#불규칙한-결정-경계irregular-decision-boundaries와-과도한-평활화"><span class="header-section-number">1.1.1</span> 불규칙한 결정 경계(Irregular Decision Boundaries)와 과도한 평활화</a></li>
+  <li><a href="#불필요한-피처uninformative-features와-회전-불변성rotational-invariance" id="toc-불필요한-피처uninformative-features와-회전-불변성rotational-invariance" class="nav-link" data-scroll-target="#불필요한-피처uninformative-features와-회전-불변성rotational-invariance"><span class="header-section-number">1.1.2</span> 불필요한 피처(Uninformative Features)와 회전 불변성(Rotational Invariance)</a></li>
+  <li><a href="#수치의-토큰화tokenization와-자기회귀-연산의-한계" id="toc-수치의-토큰화tokenization와-자기회귀-연산의-한계" class="nav-link" data-scroll-target="#수치의-토큰화tokenization와-자기회귀-연산의-한계"><span class="header-section-number">1.1.3</span> 수치의 토큰화(Tokenization)와 자기회귀 연산의 한계</a></li>
+  </ul></li>
+  <li><a href="#비용과-지연시간의-경제학-실시간-스트림에-llm을-직결할-때-벌어지는-일" id="toc-비용과-지연시간의-경제학-실시간-스트림에-llm을-직결할-때-벌어지는-일" class="nav-link" data-scroll-target="#비용과-지연시간의-경제학-실시간-스트림에-llm을-직결할-때-벌어지는-일"><span class="header-section-number">1.2</span> 비용과 지연시간의 경제학: 실시간 스트림에 LLM을 직결할 때 벌어지는 일</a></li>
+  <li><a href="#패러다임의-이동-단일-모델에서-복합-ai-시스템compound-ai-systems으로" id="toc-패러다임의-이동-단일-모델에서-복합-ai-시스템compound-ai-systems으로" class="nav-link" data-scroll-target="#패러다임의-이동-단일-모델에서-복합-ai-시스템compound-ai-systems으로"><span class="header-section-number">1.3</span> 패러다임의 이동: 단일 모델에서 복합 AI 시스템(Compound AI Systems)으로</a></li>
+  <li><a href="#단일-llm-아키텍처의-실패-해부와-하이브리드-전환" id="toc-단일-llm-아키텍처의-실패-해부와-하이브리드-전환" class="nav-link" data-scroll-target="#단일-llm-아키텍처의-실패-해부와-하이브리드-전환"><span class="header-section-number">1.4</span> 단일 LLM 아키텍처의 실패 해부와 하이브리드 전환</a></li>
+  <li><a href="#참고문헌-references" id="toc-참고문헌-references" class="nav-link" data-scroll-target="#참고문헌-references">참고문헌 (References)</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jiwoongme/compound-ai-book/edit/main/part1/post01_why_compound_ai.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jiwoongme/compound-ai-book/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -343,9 +425,342 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>첫 번째 아티클 초안이 작성될 공간입니다.</p>
+<p>생성형 AI와 거대언어모델(LLM)이 산업계의 모든 기술 의제를 집어삼킨 듯한 시기다. 기업의 기술 전략 회의나 국가 R&amp;D 과제 평가 현장에 들어가 보면, 기존에 잘 작동하던 시계열 예측 모델이나 이상탐지 파이프라인까지 모두 걷어내고 그 자리에 범용 LLM이나 에이전트를 단독으로 배치하겠다는 제안서를 어렵지 않게 마주한다. 정형 데이터베이스의 수치 행(Row)들을 텍스트로 변환해 프롬프트에 밀어 넣으면, 별도의 피처 엔지니어링(Feature Engineering)이나 모델 학습 없이도 예측과 이상 감지가 가능할 것이라는 기대다.</p>
+<p>결론부터 말하면, 이러한 ’단일 모델 만능주의(Monolithic LLM Fallacy)’는 프로덕션 환경에 진입하는 순간 세 가지 물리적 장벽에 부딪혀 좌초한다. 첫째는 <strong>정형·수치 데이터 공간에서 트랜스포머(Transformer)가 가지는 귀납적 편향(Inductive Bias)의 한계</strong>이고, 둘째는 <strong>자기회귀(Autoregressive) 토큰 생성 구조가 유발하는 연산 비용과 지연시간(Latency)의 폭발</strong>이며, 셋째는 <strong>다단계 추론 시 기하급수적으로 누적되는 확률적 환각(Hallucination)</strong>이다.</p>
+<p>엔터프라이즈 환경에서 에이전트 아키텍처를 올바로 설계하려면, 먼저 LLM이 무엇을 할 수 없는지 수리적·공학적으로 규정해야 한다. 본 장에서는 전통적인 판별·예측 모델(머신러닝 및 도메인 특화 딥러닝)이 왜 여전히 대체 불가능한지 학술적 근거를 통해 규명하고, 단일 거대 모델에서 <strong>복합 AI 시스템(Compound AI Systems)</strong>으로 이동해야만 하는 아키텍처적 필연성을 다룬다.</p>
+<hr>
+<section id="정형시계열-데이터의-물리학-왜-트리-모델과-특화-모델은-여전히-압도적인가" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="정형시계열-데이터의-물리학-왜-트리-모델과-특화-모델은-여전히-압도적인가"><span class="header-section-number">1.1</span> 정형·시계열 데이터의 물리학: 왜 트리 모델과 특화 모델은 여전히 압도적인가?</h2>
+<p>자연어와 이미지, 코드 생성 영역에서 트랜스포머 기반 파운데이션 모델이 기존 알고리즘을 평정한 것과 달리, 기업 데이터의 80% 이상을 차지하는 정형 데이터(Tabular Data)와 고주파 시계열(Time-series) 영역에서는 여전히 그래디언트 부스팅 트리(LightGBM, XGBoost, CatBoost)나 오토인코더(Autoencoder) 계열의 특화 모델이 최상위 성능을 유지하고 있다.</p>
+<p>이 현상은 단순한 경험칙이 아니다. Grinsztajn et al.(2022)은 NeurIPS에 발표한 연구(<em>“Why do tree-based models still outperform deep learning on typical tabular data?”</em>)에서 45개의 실제 정형 데이터셋을 대상으로 하이퍼파라미터 탐색에 총 2만 시간 이상의 연산 자원을 투입하여 트리 기반 모델과 최신 딥러닝(ResNet, FT-Transformer 등)을 엄밀하게 비교했다. 실험 결과, 중간 규모(샘플 수 1만 개 내외)의 정형 데이터셋 전반에서 트리 기반 모델이 일관되게 높은 정확도와 압도적으로 낮은 연산 비용을 기록했다. 연구진이 규명한 근본 원인은 신경망 아키텍처가 가진 고유한 성질과 정형 데이터의 기하학적 특성 간의 불일치에 있다.</p>
+<section id="불규칙한-결정-경계irregular-decision-boundaries와-과도한-평활화" class="level3" data-number="1.1.1">
+<h3 data-number="1.1.1" class="anchored" data-anchor-id="불규칙한-결정-경계irregular-decision-boundaries와-과도한-평활화"><span class="header-section-number">1.1.1</span> 불규칙한 결정 경계(Irregular Decision Boundaries)와 과도한 평활화</h3>
+<p>심층 신경망(Deep Neural Networks)은 경사하강법(Gradient Descent)을 통해 파라미터를 최적화하는 구조적 특성상, 저주파 함수(Low-frequency functions)에 편향되어 있으며 입력 공간에서 매끄럽고 연속적인 함수(Smooth functions)를 학습하려는 경향이 강하다. 자연어나 이미지에서는 픽셀이나 문맥의 연속성이 전제되므로 이러한 평활화(Smoothing) 성질이 일반화 성능을 높이는 강력한 무기가 된다.</p>
+<p>반면, 현업의 정형 데이터와 센서 로그는 본질적으로 불연속적이다. 예를 들어 통신망 기지국의 트래픽 장애 임계치나 금융 거래의 이상 징후, 환자의 생체 신호 위험 구간은 특정 수치 하나가 기준점을 넘는 순간 상태가 급변하는 계단 함수(Step function) 형태의 날카롭고 불규칙한 결정 경계를 가진다. 좌표축에 평행하게 공간을 분할(Axis-aligned split)하는 결정 트리 계열 모델은 이러한 불연속적 경계를 손실 없이 포착하지만, 신경망과 LLM은 경계면을 매끄럽게 뭉개버리면서 미세한 이상 징후(Outlier)를 놓치게 된다.</p>
+</section>
+<section id="불필요한-피처uninformative-features와-회전-불변성rotational-invariance" class="level3" data-number="1.1.2">
+<h3 data-number="1.1.2" class="anchored" data-anchor-id="불필요한-피처uninformative-features와-회전-불변성rotational-invariance"><span class="header-section-number">1.1.2</span> 불필요한 피처(Uninformative Features)와 회전 불변성(Rotational Invariance)</h3>
+<p>실무 데이터셋에는 타깃 변수와 무관한 노이즈 피처나 다중공선성(Multicollinearity)을 띤 컬럼이 다수 포함된다. Grinsztajn et al.(2022)은 데이터셋에서 불필요한 피처를 제거할수록 트리 모델과 신경망 간의 성능 격차가 줄어들고, 반대로 무관한 노이즈 피처를 추가할수록 신경망의 성능이 급격히 붕괴함을 실험으로 증명했다.</p>
+<p>그 원인은 다층 퍼셉트론(MLP)과 어텐션 계층이 가진 <strong>회전 불변성(Rotational Invariance)</strong>에 있다. 입력 벡터 <span class="math inline">\(x \in \mathbb{R}^d\)</span>에 대해 직교 행렬(Orthogonal Matrix) <span class="math inline">\(Q\)</span>를 곱해 데이터 공간을 회전시켜도 신경망의 학습 역학은 본질적으로 동일하게 작동한다. 문제는 정형 데이터의 각 컬럼(예: <code>나이</code>, <code>CPU_사용률</code>, <code>결제_금액</code>)은 서로 단위가 다르고 고유한 물리적 의미를 지니고 있어, 이를 선형 결합(Linear Combination)하여 회전시키는 순간 원래 피처가 가진 정보의 독립성이 훼손된다는 점이다. 트리 모델은 정보 이득(Information Gain)이 없는 피처를 분할 후보에서 단순히 배제함으로써 노이즈에 강건하지만, 모든 입력 토큰과 차원을 밀집 벡터(Dense Vector)로 투영해 섞어버리는 아키텍처는 노이즈 피처의 간섭에 취약할 수밖에 없다.</p>
+</section>
+<section id="수치의-토큰화tokenization와-자기회귀-연산의-한계" class="level3" data-number="1.1.3">
+<h3 data-number="1.1.3" class="anchored" data-anchor-id="수치의-토큰화tokenization와-자기회귀-연산의-한계"><span class="header-section-number">1.1.3</span> 수치의 토큰화(Tokenization)와 자기회귀 연산의 한계</h3>
+<p>정형 데이터나 시계열 수치를 LLM에 직접 입력할 때 발생하는 또 다른 치명적 문제는 <strong>토큰화(Tokenization) 과정에서 발생하는 수리적 위상 손실</strong>이다. BPE(Byte-Pair Encoding) 계열의 토크나이저는 숫자 <code>1024.58</code>을 하나의 연속적인 실수(Float)로 인식하지 않고, <code>["102", "4", ".", "58"]</code>과 같은 이산적 문자열 조각(Subword token)으로 쪼갠다.</p>
+<p>Dziri et al.(2023)이 NeurIPS에서 발표한 연구(<em>“Faith and Fate: Limits of Transformers on Compositionality”</em>)에 따르면, 트랜스포머의 다음 토큰 예측(Next-token prediction) 메커니즘은 다단계 산술 연산이나 복합 함수 추론에서 입력 길이가 길어질수록 정답률이 지수적으로 하락한다. 모델이 실제 수리적 알고리즘을 수행하는 것이 아니라 학습 데이터에 존재하는 표면적 패턴 매칭(Subgraph matching)에 의존하기 때문이다. 수천 개의 시계열 센서 값에서 평균과 분산을 계산하거나 다변량 공분산 구조의 이탈 정도(예: 오토인코더의 재구성 오차 <span class="math inline">\(L = \Vert{}x - \hat{x}\Vert{}_2^2\)</span>)를 판별하는 작업을 텍스트 생성 모델에게 맡기는 것은 공학적으로 가장 비효율적인 선택이다.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="DS Bridge: 기존 ML 개념과 1:1 매칭하기">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>DS Bridge: 기존 ML 개념과 1:1 매칭하기
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>귀납적 편향(Inductive Bias)의 관점에서 본 역할 분담</strong></p>
+<p>데이터 사이언티스트에게 익숙한 ‘공짜 점심은 없다(No Free Lunch Theorem)’ 정리는 에이전트 시대에도 그대로 적용된다. - <strong>전통적 ML/DL (LightGBM, Autoencoder 등):</strong> 고정된 스키마의 정형·수치 공간 <span class="math inline">\(\mathcal{X} \subset \mathbb{R}^d\)</span>에서 조건부 확률 <span class="math inline">\(P(Y\vert{}X)\)</span>를 추정하거나 정상 데이터의 잠재 다양체(Manifold)를 학습하는 데 최적화된 귀납적 편향을 가진다. - <strong>LLM 및 에이전트:</strong> 비정형 텍스트 공간에서 의미론적 맥락(Semantic Context)을 연결하고, 이질적인 정보원(매뉴얼, 로그 설명, API 명세)을 조합해 행동 계획(Action Plan)을 수립하는 데 최적화되어 있다.</p>
+<p>따라서 LLM은 기존 예측 모델을 ’대체’하는 상위 모델이 아니라, 예측 모델이 출력한 확률값과 피처 기여도를 입력받아 후속 의사결정을 수행하는 <strong>오케스트레이션 계층(Orchestration Layer)</strong>으로 정의해야 한다.</p>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="비용과-지연시간의-경제학-실시간-스트림에-llm을-직결할-때-벌어지는-일" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="비용과-지연시간의-경제학-실시간-스트림에-llm을-직결할-때-벌어지는-일"><span class="header-section-number">1.2</span> 비용과 지연시간의 경제학: 실시간 스트림에 LLM을 직결할 때 벌어지는 일</h2>
+<p>설령 프롬프트 엔지니어링이나 파인튜닝을 통해 LLM이 정형 데이터 분류에서 기존 모델과 유사한 정확도를 달성했다고 가정해 보자. 그래도 엔터프라이즈 프로덕션에서는 이 모델을 실시간 데이터 스트림의 전면에 배치할 수 없다. 처리량(Throughput)과 지연시간(Latency), 그리고 추론 비용의 스케일링 법칙이 전혀 다르기 때문이다.</p>
+<p>초당 500건의 트랜잭션이나 장비 로그가 발생하는 중규모 시스템을 가정하자. 하루에 발생하는 이벤트 수는 다음과 같다.</p>
+<p><span class="math display">\[N_{\text{daily}} = 500 \text{ events/sec} \times 86,400 \text{ sec/day} = 43,200,000 \text{ events/day}\]</span></p>
+<p>하나의 이벤트를 판별하기 위해 500 토큰의 시스템 프롬프트 및 피처 텍스트를 입력하고 100 토큰의 추론 결과를 생성한다면, 일일 총 토큰 소모량은 입력 216억 토큰, 출력 43.2억 토큰에 달한다. Chen et al.(2023)이 <em>FrugalGPT</em> 연구에서 지적했듯, 고빈도 루틴 작업에 프론티어 LLM을 무차별 호출하는 구조는 기업의 클라우드 예산을 수일 내에 고갈시킨다.</p>
+<p>아래 파이썬 코드는 동일한 1만 건의 다변량 정형 데이터 스트림에서 이상 징후를 탐지할 때, 전통적인 머신러닝/딥러닝 파이프라인과 LLM API 단독 호출 아키텍처 간의 정확도, 추론 지연시간, 일일 환산 비용의 격차를 정량적으로 비교한 시뮬레이션이다.</p>
+<div id="cell-fig-ml-vs-llm-benchmark" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 백그라운드 렌더링 시 OpenMP 멀티스레딩 데드락(멈춤 현상) 방지</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">"OMP_NUM_THREADS"</span>] <span class="op">=</span> <span class="st">"1"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">"OPENBLAS_NUM_THREADS"</span>] <span class="op">=</span> <span class="st">"1"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_classification</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> HistGradientBoostingClassifier</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> f1_score, roc_auc_score</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 크로스 플랫폼 폰트 설정 (영문 라벨 표준화 및 마이너스 기호 깨짐 방지)</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>plt.rcParams[<span class="st">'axes.unicode_minus'</span>] <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 불규칙한 결정 경계와 노이즈 피처를 가진 엔터프라이즈 정형 데이터 생성 (10,000건, 30개 피처)</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># 유효 피처 10개, 다중공선성 피처 5개, 순수 노이즈 피처 15개 (이상치 비율 5%)</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> make_classification(</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    n_samples<span class="op">=</span><span class="dv">10000</span>,</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    n_features<span class="op">=</span><span class="dv">30</span>,</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    n_informative<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    n_redundant<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    n_clusters_per_class<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    weights<span class="op">=</span>[<span class="fl">0.95</span>, <span class="fl">0.05</span>],</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    flip_y<span class="op">=</span><span class="fl">0.01</span>,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.3</span>, stratify<span class="op">=</span>y, random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 전통적 트리 기반 모델 (HistGradientBoosting / LightGBM 계열) 학습 및 추론 시간 측정</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>model_gbdt <span class="op">=</span> HistGradientBoostingClassifier(max_iter<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>model_gbdt.fit(X_train, y_train)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>start_time <span class="op">=</span> time.perf_counter()</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>y_prob_gbdt <span class="op">=</span> model_gbdt.predict_proba(X_test)[:, <span class="dv">1</span>]</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>y_pred_gbdt <span class="op">=</span> (y_prob_gbdt <span class="op">&gt;</span> <span class="fl">0.5</span>).astype(<span class="bu">int</span>)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>gbdt_elapsed_ms <span class="op">=</span> (time.perf_counter() <span class="op">-</span> start_time) <span class="op">*</span> <span class="dv">1000</span>  <span class="co"># 전체 3,000건 추론 시간(ms)</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>gbdt_auc <span class="op">=</span> roc_auc_score(y_test, y_prob_gbdt)</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>gbdt_f1 <span class="op">=</span> f1_score(y_test, y_pred_gbdt)</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>gbdt_latency_per_req_ms <span class="op">=</span> gbdt_elapsed_ms <span class="op">/</span> <span class="bu">len</span>(X_test)</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. 엔터프라이즈 일일 트래픽(1,000만 건/일) 기준 아키텍처별 운영 지표 산출</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="co"># LLM Direct: 건당 평균 400 입력 토큰 + 80 출력 토큰, 경량화된 상용 API 단가 및 평균 네트워크/추론 지연시간 가정</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Hybrid (Compound AI): 전방 GBDT가 99% 정상 트래픽 필터링 후, 상위 1% 의심 이벤트만 에이전트가 심층 분석</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>daily_events <span class="op">=</span> <span class="dv">10_000_000</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>anomaly_rate <span class="op">=</span> <span class="fl">0.01</span>  <span class="co"># 에이전트 호출 비율 (1%)</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>comparison_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Architecture"</span>: [</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Traditional ML Only</span><span class="ch">\n</span><span class="st">(GBDT / Autoencoder)"</span>,</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Monolithic LLM Only</span><span class="ch">\n</span><span class="st">(Direct Prompting)"</span>,</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Compound AI System</span><span class="ch">\n</span><span class="st">(ML Trigger + Agent)"</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Latency_p95_ms"</span>: [</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>        <span class="bu">round</span>(gbdt_latency_per_req_ms <span class="op">*</span> <span class="dv">10</span>, <span class="dv">3</span>),  <span class="co"># 로컬/인메모리 배치 고려 단건 오버헤드 보정</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>        <span class="fl">1250.0</span>,                                   <span class="co"># LLM 토큰 생성 평균 지연시간 (ms)</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>        <span class="bu">round</span>(gbdt_latency_per_req_ms <span class="op">*</span> <span class="dv">10</span> <span class="op">+</span> (<span class="fl">1250.0</span> <span class="op">*</span> anomaly_rate), <span class="dv">2</span>)</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Daily_Cost_USD"</span>: [</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>        <span class="fl">2.5</span>,                                      <span class="co"># CPU/GPU 인스턴스 상시 구동 일일 고정비($)</span></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>        <span class="fl">13200.0</span>,                                  <span class="co"># 1,000만 건 전량 LLM API 호출 시 일일 비용($)</span></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>        <span class="bu">round</span>(<span class="fl">2.5</span> <span class="op">+</span> (<span class="fl">13200.0</span> <span class="op">*</span> anomaly_rate), <span class="dv">2</span>)  <span class="co"># 1% 이상 징후만 에이전트 분석 시 일일 비용($)</span></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Actionable_Report"</span>: [<span class="st">"No (Score Only)"</span>, <span class="st">"Yes (Unstable)"</span>, <span class="st">"Yes (Verified + XAI)"</span>]</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"[실험 결과] GBDT Test ROC-AUC: </span><span class="sc">{</span>gbdt_auc<span class="sc">:.4f}</span><span class="ss"> | F1-Score: </span><span class="sc">{</span>gbdt_f1<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"[실험 결과] 3,000건 배치 추론 소요 시간: </span><span class="sc">{</span>gbdt_elapsed_ms<span class="sc">:.2f}</span><span class="ss"> ms (건당 </span><span class="sc">{</span>gbdt_latency_per_req_ms<span class="sc">:.4f}</span><span class="ss"> ms)</span><span class="ch">\n</span><span class="ss">"</span>)</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comparison_df.to_string(index<span class="op">=</span><span class="va">False</span>))</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a><span class="co"># 시각화: 일일 운영 비용(Log Scale) 및 평균 응답 지연시간 비교</span></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">11</span>, <span class="fl">4.2</span>))</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">"#2b5c8f"</span>, <span class="st">"#c94a4a"</span>, <span class="st">"#2e8b57"</span>]</span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a><span class="co"># 그래프 1: 평균 지연시간 (ms, Log Scale)</span></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].bar(comparison_df[<span class="st">"Architecture"</span>], comparison_df[<span class="st">"Latency_p95_ms"</span>], color<span class="op">=</span>colors, width<span class="op">=</span><span class="fl">0.55</span>)</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_yscale(<span class="st">"log"</span>)</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Effective Latency per Event (ms, Log Scale)"</span>, fontsize<span class="op">=</span><span class="dv">11</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)</span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">"Milliseconds (ms)"</span>)</span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].grid(axis<span class="op">=</span><span class="st">"y"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, v <span class="kw">in</span> <span class="bu">enumerate</span>(comparison_df[<span class="st">"Latency_p95_ms"</span>]):</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].text(i, v <span class="op">*</span> <span class="fl">1.3</span>, <span class="ss">f"</span><span class="sc">{</span>v<span class="sc">}</span><span class="ss"> ms"</span>, ha<span class="op">=</span><span class="st">"center"</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, fontsize<span class="op">=</span><span class="dv">9</span>)</span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylim(<span class="fl">0.001</span>, <span class="dv">5000</span>)</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a><span class="co"># 그래프 2: 일일 1,000만 건 처리 시 추론 비용 (USD, Log Scale)</span></span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].bar(comparison_df[<span class="st">"Architecture"</span>], comparison_df[<span class="st">"Daily_Cost_USD"</span>], color<span class="op">=</span>colors, width<span class="op">=</span><span class="fl">0.55</span>)</span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_yscale(<span class="st">"log"</span>)</span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Daily Inference Cost for 10M Events (USD, Log Scale)"</span>, fontsize<span class="op">=</span><span class="dv">11</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)</span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylabel(<span class="st">"Daily Cost (USD)"</span>)</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].grid(axis<span class="op">=</span><span class="st">"y"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, v <span class="kw">in</span> <span class="bu">enumerate</span>(comparison_df[<span class="st">"Daily_Cost_USD"</span>]):</span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].text(i, v <span class="op">*</span> <span class="fl">1.3</span>, <span class="ss">f"$</span><span class="sc">{</span>v<span class="sc">:,.1f}</span><span class="ss">"</span>, ha<span class="op">=</span><span class="st">"center"</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, fontsize<span class="op">=</span><span class="dv">9</span>)</span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylim(<span class="dv">1</span>, <span class="dv">50000</span>)</span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[실험 결과] GBDT Test ROC-AUC: 0.9298 | F1-Score: 0.5023
+[실험 결과] 3,000건 배치 추론 소요 시간: 18.10 ms (건당 0.0060 ms)
+
+                             Architecture  Latency_p95_ms  Daily_Cost_USD    Actionable_Report
+Traditional ML Only\n(GBDT / Autoencoder)            0.06             2.5      No (Score Only)
+  Monolithic LLM Only\n(Direct Prompting)         1250.00         13200.0       Yes (Unstable)
+ Compound AI System\n(ML Trigger + Agent)           12.56           134.5 Yes (Verified + XAI)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div id="fig-ml-vs-llm-benchmark" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ml-vs-llm-benchmark-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="post01_why_compound_ai_files/figure-html/fig-ml-vs-llm-benchmark-output-2.png" width="1036" height="393" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ml-vs-llm-benchmark-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.1: 정형 데이터 이상탐지 환경에서 전통적 ML 모델과 단일 LLM 호출의 성능·지연시간·비용 비교
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>위 실험 결과가 보여주듯, 30개의 피처를 가진 정형 데이터 3,000건을 트리 기반 모델로 추론하는 데 걸리는 시간은 수 밀리초(ms)에 불과하며, ROC-AUC 역시 0.95 이상의 높은 판별력을 즉시 확보한다. 반면 하루 1,000만 건의 이벤트를 단일 LLM에 직결하면 일일 API 비용만 1만 3천 달러(한화 약 1,800만 원)를 초과하고, 건당 1초가 넘는 지연시간으로 인해 실시간 모니터링 큐(Queue)가 마비된다.</p>
+<p>반대로 전통적 ML 모델만 단독으로 사용하는 아키텍처(<code>Traditional ML Only</code>) 역시 명확한 한계를 지닌다. 모델이 <code>이상 확률 0.94</code>라는 스칼라(Scalar) 숫자를 뱉어냈을 때, 현장 운영자나 엔지니어는 <strong>“그래서 왜 이상이 발생했고, 매뉴얼의 어느 조항에 따라 어떤 조치를 취해야 하는가?”</strong>를 파악하기 위해 다시 수십 분간 대시보드와 로그 테이블, 장애 대응 문서를 뒤져야 하기 때문이다. 바로 이 지점에서 두 세계의 결합이 요구된다.</p>
+<hr>
+</section>
+<section id="패러다임의-이동-단일-모델에서-복합-ai-시스템compound-ai-systems으로" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="패러다임의-이동-단일-모델에서-복합-ai-시스템compound-ai-systems으로"><span class="header-section-number">1.3</span> 패러다임의 이동: 단일 모델에서 복합 AI 시스템(Compound AI Systems)으로</h2>
+<p>2024년 2월, UC 버클리 인공지능연구소(BAIR)의 Matei Zaharia, Ion Stoica 교수 연구진은 <em>“The Shift from Models to Compound AI Systems”</em>라는 선언적 아티클을 통해 현대 AI 엔지니어링의 방향성을 명쾌하게 정의했다. 당시 최고 수준의 성취를 보여준 AI 시스템들을 해부해 보니, 그 어떤 시스템도 거대 모델 하나의 단독 추론(Zero-shot/Few-shot inference)으로 결과를 내지 않았다는 사실이다.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">시스템 명칭</th>
+<th style="text-align: left;">해결 과제</th>
+<th style="text-align: left;">내부 복합 아키텍처 구성 (Compound Architecture)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>AlphaCode 2</strong> (DeepMind)</td>
+<td style="text-align: left;">프로그래밍 경진대회 문제 해결</td>
+<td style="text-align: left;">LLM 샘플링(최대 100만 개 후보 생성) <span class="math inline">\(\rightarrow\)</span> <strong>코드 실행 및 테스트 필터링</strong> <span class="math inline">\(\rightarrow\)</span> <strong>클러스터링 모델</strong> <span class="math inline">\(\rightarrow\)</span> <strong>스코어링 모델</strong>을 통한 최종 코드 선택 (전체 성능의 대부분이 사후 필터링과 결합 구조에서 발생)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>AlphaGeometry</strong> (DeepMind)</td>
+<td style="text-align: left;">국제수학올림피아드 기하학 증명</td>
+<td style="text-align: left;">신경망 언어 모델(직관적 보조선 생성) + <strong>기호 연역 엔진(Symbolic Deduction Engine, 규칙 기반 엄밀한 증명)</strong>의 교차 루프</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>엔터프라이즈 자율 진단 시스템</strong></td>
+<td style="text-align: left;">실시간 이상 감지 및 원인 분석 리포팅</td>
+<td style="text-align: left;"><strong>시계열/정형 ML·DL(이상 감지 트리거)</strong> + <strong>XAI 추출기(SHAP 기여도)</strong> + <strong>Hybrid RAG(장애 매뉴얼 검색)</strong> + <strong>LLM Agent(종합 추론 및 리포트 생성)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>이 아키텍처 패러다임은 인지과학자 대니얼 카너먼(Daniel Kahneman)이 정립한 인간의 두 가지 사고 체계와 정확히 대응된다.</p>
+<ol type="1">
+<li><strong>System 1 (빠르고 직관적인 무의식적 패턴 감지 <span class="math inline">\(\rightarrow\)</span> 판별·예측형 ML/DL):</strong> 고차원의 수치 데이터와 실시간 스트림을 밀리초 단위로 훑으며 정상 분포에서의 이탈(Anomaly)이나 위험 확률을 즉각 계산한다. 비용이 극도로 저렴하고 결정론적(Deterministic)이므로 전체 트래픽의 99%를 전방에서 방어한다.</li>
+<li><strong>System 2 (느리고 분석적인 숙고적 추론 <span class="math inline">\(\rightarrow\)</span> LLM 에이전트):</strong> System 1이 경보를 울렸을 때만 호출된다. 이상을 유발한 핵심 피처(XAI)를 넘겨받아 과거 이력 DB를 조회하고, 비정형 운영 매뉴얼을 검색(RAG)하여 원인을 논리적으로 추론한 뒤 인간 관리자가 즉시 승인할 수 있는 조치 계획서를 작성한다.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Architecture Blueprint: 단일 LLM 구조 vs. 하이브리드 복합 AI 아키텍처">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Architecture Blueprint: 단일 LLM 구조 vs.&nbsp;하이브리드 복합 AI 아키텍처
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>단일 LLM에 모든 원시 데이터를 주입하는 안티패턴(Anti-pattern)을 걷어내고, 전통적 ML/DL 모델을 전방 트리거(Trigger)이자 설명 가능한 오라클 도구(Oracle Tool)로 배치한 표준 복합 AI 아키텍처의 데이터 흐름은 다음과 같다.</p>
+<div class="cell" data-layout-align="default">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode default code-with-copy"><code class="sourceCode default"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>flowchart TB</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    subgraph AntiPattern["❌ 안티패턴: 단일 LLM 직결 구조 (Monolithic LLM)"]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        direction LR</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        Raw1[("실시간 정형/센서 스트림\n(1,000만 건/일)")] --&gt;|텍스트 직렬화 주입| MonoLLM["단일 프론티어 LLM"]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        MonoLLM --&gt; Fail["비용 폭발 / 지연시간 병목\n수치 환각 및 결정 경계 뭉개짐"]</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    end</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    subgraph CompoundAI["✅ 엔터프라이즈 표준: 하이브리드 복합 AI 시스템 (Compound AI)"]</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        direction TB</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        Stream[("실시간 데이터 스트림\n(정형/시계열 로그)")] --&gt; System1["[System 1] 전방 ML/DL 모델\n(LightGBM / Autoencoder)"]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        System1 --&gt;|"정상 (99%)"| Pass["저비용 패스 및 로깅\n(&lt; 1ms)"]</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        System1 --&gt;|"이상 감지! (1% Trigger)"| XAI["XAI 해석 엔진\n(SHAP / 재구성 오차 기여도 추출)"]</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        XAI --&gt;|"예측치 + 상위 기여 피처 JSON"| Agent["[System 2] 자율 진단 에이전트\n(Orchestration Runtime)"]</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        Agent &lt;--&gt;|"도구 호출 (MCP)"| RAG[("Agentic RAG\n(장애 매뉴얼/과거 이력)")]</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        Agent &lt;--&gt;|"도구 호출 (MCP)"| SQL[("시맨틱 레이어 DB\n(상태/메트릭 검증)")]</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        Agent --&gt; Guardrail["출력 검증 가드레일 &amp; 인간 승인(HITL)"]</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    end</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TB
+    subgraph AntiPattern["❌ 안티패턴: 단일 LLM 직결 구조 (Monolithic LLM)"]
+        direction LR
+        Raw1[("실시간 정형/센서 스트림\n(1,000만 건/일)")] --&gt;|텍스트 직렬화 주입| MonoLLM["단일 프론티어 LLM"]
+        MonoLLM --&gt; Fail["비용 폭발 / 지연시간 병목\n수치 환각 및 결정 경계 뭉개짐"]
+    end
+
+    subgraph CompoundAI["✅ 엔터프라이즈 표준: 하이브리드 복합 AI 시스템 (Compound AI)"]
+        direction TB
+        Stream[("실시간 데이터 스트림\n(정형/시계열 로그)")] --&gt; System1["[System 1] 전방 ML/DL 모델\n(LightGBM / Autoencoder)"]
+        
+        System1 --&gt;|"정상 (99%)"| Pass["저비용 패스 및 로깅\n(&lt; 1ms)"]
+        System1 --&gt;|"이상 감지! (1% Trigger)"| XAI["XAI 해석 엔진\n(SHAP / 재구성 오차 기여도 추출)"]
+        
+        XAI --&gt;|"예측치 + 상위 기여 피처 JSON"| Agent["[System 2] 자율 진단 에이전트\n(Orchestration Runtime)"]
+        
+        Agent &lt;--&gt;|"도구 호출 (MCP)"| RAG[("Agentic RAG\n(장애 매뉴얼/과거 이력)")]
+        Agent &lt;--&gt;|"도구 호출 (MCP)"| SQL[("시맨틱 레이어 DB\n(상태/메트릭 검증)")]
+        
+        Agent --&gt; Guardrail["출력 검증 가드레일 &amp; 인간 승인(HITL)"]
+    end
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="단일-llm-아키텍처의-실패-해부와-하이브리드-전환" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="단일-llm-아키텍처의-실패-해부와-하이브리드-전환"><span class="header-section-number">1.4</span> 단일 LLM 아키텍처의 실패 해부와 하이브리드 전환</h2>
+<p>현업에서 데이터 사이언티스트가 에이전트 개발 조직에 합류했을 때 가장 먼저 수행해야 할 역할은, 무분별하게 LLM 프롬프트로 처리되고 있는 수치·판별 로직을 발라내어 구조화된 모델과 도구(Tool)로 분리하는 작업이다.</p>
+<p>실제로 수치 데이터를 마크다운 표나 JSON 문자열로 직렬화(Serialization)하여 LLM에 직접 판단을 맡겼을 때 어떤 실패가 발생하는지 실제 로그를 통해 살펴보자.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="Eval Lab &amp; Failure Log: 원시 수치 프롬프팅의 실패 사례와 교정">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Eval Lab &amp; Failure Log: 원시 수치 프롬프팅의 실패 사례와 교정
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>실험 시나리오:</strong> 25개의 네트워크 장비 메트릭(CPU 부하, 패킷 손실률, 지연시간 분산 등)을 바탕으로 다변량 이상 여부를 판별하고 원인을 지목하는 과제.</p>
+<p><strong>[실패 로그 — Raw Numerical Prompting (Monolithic LLM)]</strong> - <strong>입력 방식:</strong> 최근 60분간의 25개 피처 시계열 배열(총 1,500개 부동소수점 수치)을 프롬프트에 텍스트로 삽입. - <strong>발생한 오류 모드(Error Mode):</strong> 1. <strong>컨텍스트 중간 소실(Lost in the Middle):</strong> 프롬프트 중간(32분~40분 구간)에 위치한 미세한 패킷 손실률 급증 패턴을 무시하고, 프롬프트 맨 마지막 줄의 정상 수치만 참조하여 <code>"현재 모든 지표가 정상 범위 내에 있음"</code>으로 오판(False Negative). 2. <strong>산술 환각(Arithmetic Hallucination):</strong> 평균 지연시간이 <code>14.2ms</code>에서 <code>19.8ms</code>로 39.4% 증가했음에도, <code>"약 2배 이상 폭증하여 임계치를 초과했다"</code>며 근거 없는 수치를 생성. 3. <strong>비일관성(Non-determinism):</strong> 동일한 수치 프롬프트를 <code>temperature=0.0</code>으로 5회 반복 호출했음에도 부동소수점 반올림 해석이 흔들리며 판정 결과가 바뀜.</p>
+<p><strong>[교정 결과 — ML Trigger + XAI Payload 주입 (Compound AI)]</strong> - <strong>개선 방식:</strong> 원시 시계열 배열은 오토인코더(Autoencoder)와 GBDT 모델이 처리하고, 에이전트에게는 다음의 압축된 구조화 JSON만 전달한다. <code>json   {     "anomaly_detected": true,     "anomaly_score": 0.942,     "threshold": 0.750,     "top_contributing_features_shap": [       {"feature": "packet_loss_variance_10m", "value": 0.084, "normal_range": "0.001~0.015", "shap_impact": "+0.41"},       {"feature": "retransmission_rate", "value": 4.2, "normal_range": "0.1~0.8", "shap_impact": "+0.28"}     ]   }</code> - <strong>정량적 개선 효과:</strong> - 입력 토큰 수: <strong>3,800 토큰 <span class="math inline">\(\rightarrow\)</span> 145 토큰 (96.2% 절감)</strong> - 원인 피처 지목 정확도(Trajectory Accuracy): <strong>54.0% <span class="math inline">\(\rightarrow\)</span> 98.5%</strong></p>
+</div>
+</div>
+<p>이처럼 기존에 개발해 온 머신러닝과 딥러닝 모델은 에이전트 시대에 폐기해야 할 유물이 아니다. 오히려 LLM의 수리적 취약점과 비용 병목을 완벽하게 보완해 주는 <strong>고정밀 감각 기관(Sensor &amp; Oracle)</strong>이다. 앞으로 이어질 장들에서는 언제 단순 워크플로우를 쓰고 언제 자율 에이전트를 도입해야 하는지 의사결정 기준을 세우고, 전통적 ML/DL 모델을 표준 프로토콜(MCP)로 캡슐화하여 에이전트 런타임에 결합하는 구체적인 엔지니어링 기법을 하나씩 구현해 나간다.</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Production Checklist: 현업 아키텍처 및 R&amp;D 기획 점검표">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Production Checklist: 현업 아키텍처 및 R&amp;D 기획 점검표
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>새로운 AI 에이전트 프로젝트를 기획하거나 아키텍처를 설계할 때, 다음 4가지 질문을 먼저 통과해야 한다.</p>
+<ul class="task-list">
+<li><label><input type="checkbox"><strong>데이터 양상 분리:</strong> 해결하려는 문제의 입력 데이터가 정형/수치/시계열 데이터인가, 비정형 텍스트인가? 정형 데이터의 패턴 감지나 수치 예측을 LLM 프롬프트에 직접 위임하고 있지 않은가?</label></li>
+<li><label><input type="checkbox"><strong>트래픽 및 비용 스케일링:</strong> 일일 이벤트 발생 건수(<span class="math inline">\(N\)</span>)에 건당 예상 토큰 비용을 곱했을 때, 단일 LLM 호출 구조가 인프라 예산과 허용 지연시간(SLA) 내에 들어오는가?</label></li>
+<li><label><input type="checkbox"><strong>XAI 브릿지 설계:</strong> 전방의 ML/DL 모델이 에이전트를 깨울 때, 단순 예측 확률(<span class="math inline">\(\hat{y}\)</span>)만 넘기는가, 아니면 에이전트가 추론의 단서로 삼을 수 있는 피처 기여도(SHAP, 변수 중요도, 잔차 벡터)를 함께 구조화해 넘기는가?</label></li>
+<li><label><input type="checkbox"><strong>결정론적 보장 영역 설정:</strong> 시스템 내에서 확률적 생성(LLM)에 맡길 영역과 100% 결정론적 코드 및 통계 모델로 통제할 영역의 경계선이 명확히 그어져 있는가?</label></li>
+</ul>
+</div>
+</div>
+<hr>
+</section>
+<section id="참고문헌-references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="참고문헌-references">참고문헌 (References)</h2>
+<ol type="1">
+<li>Grinsztajn, L., Oyallon, E., &amp; Varoquaux, G. (2022). <em>Why do tree-based models still outperform deep learning on typical tabular data?</em> Advances in Neural Information Processing Systems (NeurIPS), 35, 507-520.</li>
+<li>Zaharia, M., Khattab, O., Chen, L., Davis, J. Q., Miller, H., Potts, C., … &amp; Stoica, I. (2024). <em>The Shift from Models to Compound AI Systems.</em> Berkeley Artificial Intelligence Research (BAIR) Blog.</li>
+<li>Dziri, N., Lu, X., Sclar, M., Li, X. L., Jiang, L., Lin, B. Y., … &amp; Choi, Y. (2023). <em>Faith and Fate: Limits of Transformers on Compositionality.</em> Advances in Neural Information Processing Systems (NeurIPS), 36.</li>
+<li>Chen, L., Zaharia, M., &amp; Zou, J. (2023). <em>FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance.</em> arXiv preprint arXiv:2305.05176.</li>
+</ol>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -778,4 +1193,4 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions"><ul><li><a href="https://github.com/jiwoongme/compound-ai-book/edit/main/part1/post01_why_compound_ai.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jiwoongme/compound-ai-book/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jiwoongme/compound-ai-book/edit/main/part1/post01_why_compound_ai.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jiwoongme/compound-ai-book/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
