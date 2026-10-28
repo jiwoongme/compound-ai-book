@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; 데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처 – 예측 모델을 넘어 자율 에이전트로</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part1/post04_cot_react_reflexion.html" rel="next">
+<link href="../part1/post02_workflow_vs_agent.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-36f2db2e0c24a8dfe38894d2c7306603.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1/post01_why_compound_ai.html">Part 1. 단일 모델에서 복합 AI 시스템으로</a></li><li class="breadcrumb-item"><a href="../part1/post03_agent_core_architecture.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">예측 모델을 넘어 자율 에이전트로</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/jiwoongme/compound-ai-book" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">서문: 데이터 사이언티스트를 위한 에이전트 엔지니어링</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part 1. 단일 모델에서 복합 AI 시스템으로</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post01_why_compound_ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">왜 거대언어모델(LLM) 하나로는 실무 문제를 풀 수 없는가?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post02_workflow_vs_agent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post03_agent_core_architecture.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post04_cot_react_reflexion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">추론(Reasoning)과 행동(Acting)의 루프: CoT에서 ReAct, Reflexion까지</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post05_tool_calling_and_mcp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">post05_tool_calling_and_mcp.html</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">참고문헌 (References)</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#한눈에-비교하는-전통적-ml-파이프라인과-에이전트-런타임" id="toc-한눈에-비교하는-전통적-ml-파이프라인과-에이전트-런타임" class="nav-link active" data-scroll-target="#한눈에-비교하는-전통적-ml-파이프라인과-에이전트-런타임"><span class="header-section-number">3.1</span> 한눈에 비교하는 전통적 ML 파이프라인과 에이전트 런타임</a></li>
+  <li><a href="#해부-1-기억memory-아키텍처-컨텍스트-윈도우라는-제한된-작업-공간" id="toc-해부-1-기억memory-아키텍처-컨텍스트-윈도우라는-제한된-작업-공간" class="nav-link" data-scroll-target="#해부-1-기억memory-아키텍처-컨텍스트-윈도우라는-제한된-작업-공간"><span class="header-section-number">3.2</span> 해부 1: 기억(Memory) 아키텍처 — 컨텍스트 윈도우라는 제한된 작업 공간</a>
+  <ul class="collapse">
+  <li><a href="#작업-메모리-working-memory-단기-기억" id="toc-작업-메모리-working-memory-단기-기억" class="nav-link" data-scroll-target="#작업-메모리-working-memory-단기-기억"><span class="header-section-number">3.2.1</span> 1. 작업 메모리 (Working Memory / 단기 기억)</a></li>
+  <li><a href="#장기-기억-long-term-memory의-3가지-세부-영역" id="toc-장기-기억-long-term-memory의-3가지-세부-영역" class="nav-link" data-scroll-target="#장기-기억-long-term-memory의-3가지-세부-영역"><span class="header-section-number">3.2.2</span> 2. 장기 기억 (Long-term Memory)의 3가지 세부 영역</a></li>
+  </ul></li>
+  <li><a href="#해부-2-계획planning-메커니즘-사전-분해와-사후-복기" id="toc-해부-2-계획planning-메커니즘-사전-분해와-사후-복기" class="nav-link" data-scroll-target="#해부-2-계획planning-메커니즘-사전-분해와-사후-복기"><span class="header-section-number">3.3</span> 해부 2: 계획(Planning) 메커니즘 — 사전 분해와 사후 복기</a>
+  <ul class="collapse">
+  <li><a href="#하위-목표-분해-큰-문제를-작게-쪼개기" id="toc-하위-목표-분해-큰-문제를-작게-쪼개기" class="nav-link" data-scroll-target="#하위-목표-분해-큰-문제를-작게-쪼개기"><span class="header-section-number">3.3.1</span> 1. 하위 목표 분해: 큰 문제를 작게 쪼개기</a></li>
+  <li><a href="#사후-복기와-피드백-루프-실패에서-배우기" id="toc-사후-복기와-피드백-루프-실패에서-배우기" class="nav-link" data-scroll-target="#사후-복기와-피드백-루프-실패에서-배우기"><span class="header-section-number">3.3.2</span> 2. 사후 복기와 피드백 루프: 실패에서 배우기</a></li>
+  </ul></li>
+  <li><a href="#해부-3-도구-사용tool-use-언어-모델을-현실-세계와-연결하는-손과-발" id="toc-해부-3-도구-사용tool-use-언어-모델을-현실-세계와-연결하는-손과-발" class="nav-link" data-scroll-target="#해부-3-도구-사용tool-use-언어-모델을-현실-세계와-연결하는-손과-발"><span class="header-section-number">3.4</span> 해부 3: 도구 사용(Tool Use) — 언어 모델을 현실 세계와 연결하는 손과 발</a></li>
+  <li><a href="#파이썬으로-구현하며-이해하는-에이전트-코어-데이터-구조" id="toc-파이썬으로-구현하며-이해하는-에이전트-코어-데이터-구조" class="nav-link" data-scroll-target="#파이썬으로-구현하며-이해하는-에이전트-코어-데이터-구조"><span class="header-section-number">3.5</span> 파이썬으로 구현하며 이해하는 에이전트 코어 데이터 구조</a>
+  <ul class="collapse">
+  <li><a href="#코드-및-실험-결과-해설" id="toc-코드-및-실험-결과-해설" class="nav-link" data-scroll-target="#코드-및-실험-결과-해설"><span class="header-section-number">3.5.1</span> 코드 및 실험 결과 해설</a></li>
+  </ul></li>
+  <li><a href="#실무-메모리-설계의-핵심-무작정-쌓아두기-vs.-정제하여-기억하기" id="toc-실무-메모리-설계의-핵심-무작정-쌓아두기-vs.-정제하여-기억하기" class="nav-link" data-scroll-target="#실무-메모리-설계의-핵심-무작정-쌓아두기-vs.-정제하여-기억하기"><span class="header-section-number">3.6</span> 실무 메모리 설계의 핵심: 무작정 쌓아두기 vs.&nbsp;정제하여 기억하기</a></li>
+  <li><a href="#참고문헌-references" id="toc-참고문헌-references" class="nav-link" data-scroll-target="#참고문헌-references">참고문헌 (References)</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jiwoongme/compound-ai-book/edit/main/part1/post03_agent_core_architecture.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jiwoongme/compound-ai-book/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1/post01_why_compound_ai.html">Part 1. 단일 모델에서 복합 AI 시스템으로</a></li><li class="breadcrumb-item"><a href="../part1/post03_agent_core_architecture.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>앞선 2장에서는 정해진 코드 경로를 따르는 워크플로우(Workflow)와 스스로 실행 경로를 결정하는 자율 에이전트(Autonomous Agent)의 차이를 살펴보았다. 사전에 절차를 확정할 수 없는 복합적인 문제를 풀기 위해 에이전트를 도입하기로 결정했다면, 이제 에이전트의 내부 구조를 본격적으로 설계할 차례다.</p>
+<p>처음 에이전트 개발을 접하는 데이터 사이언티스트나 주니어 개발자는 흔히 거대언어모델(LLM) 자체를 에이전트라고 생각한다. 하지만 LLM은 입력된 텍스트 다음에 올 확률이 가장 높은 토큰을 계산하는 <strong>추론 엔진(Inference Engine)</strong>일 뿐이다. 이 추론 엔진이 실제 운영 환경에서 목표를 달성하려면 과거의 대화와 작업 이력을 기억하고, 큰 목표를 실행 가능한 단위로 쪼개며, 외부 시스템과 데이터를 주고받을 수 있는 주변부 시스템이 뒷받침되어야 한다.</p>
+<p>오픈AI(OpenAI)의 연구자 릴리안 웽(Lilian Weng, 2023)은 기술 보고서 <em>“LLM Powered Autonomous Agents”</em>를 통해 자율 에이전트의 핵심 아키텍처를 다음의 직관적인 수식으로 정의했다.</p>
+<p><span class="math display">\[\text{Agent System} = \text{LLM Core} + \text{Planning (계획)} + \text{Memory (기억)} + \text{Tool Use (도구 사용)}\]</span></p>
+<p>이어 프린스턴 대학교의 시어도어 수머스 연구팀(Sumers et al., 2024)은 <em>CoALA(Cognitive Architectures for Language Agents)</em> 논문에서 이 구조를 컴퓨터 과학의 운영체제(OS) 및 인지과학 모델과 결합해 더욱 엄밀한 공학적 표준으로 체계화했다.</p>
+<p>본 장에서는 외래어와 추상적인 비유로 가득한 에이전트 구성 요소를 데이터 사이언티스트에게 익숙한 <strong>머신러닝 파이프라인(피처 스토어, 상태 공간, 추론 런타임)</strong>의 개념과 일대일로 대조하여 해부한다.</p>
+<hr>
+<section id="한눈에-비교하는-전통적-ml-파이프라인과-에이전트-런타임" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="한눈에-비교하는-전통적-ml-파이프라인과-에이전트-런타임"><span class="header-section-number">3.1</span> 한눈에 비교하는 전통적 ML 파이프라인과 에이전트 런타임</h2>
+<p>전통적인 머신러닝 모델(예: LightGBM, Autoencoder)을 서빙하는 시스템과 LLM 에이전트 시스템은 겉모습은 달라 보이지만, 데이터를 입력받아 상태를 갱신하고 결과를 출력한다는 점에서 구조적으로 명확히 대응된다.</p>
+<p>가장 큰 차이는 <strong>실행 호흡(Execution Horizon)</strong>에 있다. 전통적인 머신러닝 추론 파이프라인은 피처 스토어(Feature Store)에서 변수들을 조회해 모델에 넣으면 단 한 번의 순전파(Forward Pass)로 예측값(<span class="math inline">\(\hat{y}\)</span>)을 반환하고 작업이 끝나는 <strong>단발성 무상태(Stateless) 구조</strong>다. 반면 에이전트는 목표를 달성할 때까지 자신의 출력 결과를 다시 다음 단계의 입력으로 삼아 여러 번 순환하는 <strong>다단계 상태 유지(Stateful) 구조</strong>를 가진다.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="DS Bridge: 기존 ML 개념과 에이전트 개념 1:1 매칭하기">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>DS Bridge: 기존 ML 개념과 에이전트 개념 1:1 매칭하기
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>기존에 머신러닝 모델과 데이터 파이프라인을 구축해 본 엔지니어라면, 에이전트의 4대 구성 요소를 전혀 새로운 기술로 받아들일 필요가 없다. 아래 표와 같이 기존 ML 시스템의 핵심 모듈이 다단계 추론 환경에 맞게 확장된 것으로 이해하면 전체 구조가 명쾌하게 잡힌다.</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">에이전트 핵심 요소</th>
+<th style="text-align: left;">전통적 ML / 데이터 엔지니어링 대응 개념</th>
+<th style="text-align: left;">시스템 내부에서의 실질적 역할</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>LLM 코어 (Brain)</strong></td>
+<td style="text-align: left;">학습이 완료된 모델 가중치 (<code>model.predict</code>)</td>
+<td style="text-align: left;">현재 주어진 문맥(Context)을 바탕으로 다음 행동이나 응답 토큰의 조건부 확률 분포를 계산하는 중앙 연산 장치</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>작업 메모리 (Short-term Memory)</strong></td>
+<td style="text-align: left;">추론 시점의 입력 피처 벡터 (<span class="math inline">\(x_t\)</span>) 및 세션 캐시 (Redis 등)</td>
+<td style="text-align: left;">현재 진행 중인 과업의 목표, 직전 대화 내역, 방금 실행한 도구의 결괏값을 담아두는 <strong>LLM의 컨텍스트 윈도우(Context Window)</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>장기 기억 (Long-term Memory)</strong></td>
+<td style="text-align: left;">오프라인 피처 스토어 (Feature Store) 및 데이터 웨어하우스</td>
+<td style="text-align: left;">컨텍스트 윈도우 밖에 존재하는 영구 저장소(벡터 DB, RDB 등). 필요한 시점에 검색(Retrieval)하여 작업 메모리로 불러옴</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>계획 (Planning)</strong></td>
+<td style="text-align: left;">다단계 파이프라인 스케줄러 및 트리 탐색 (Beam Search 등)</td>
+<td style="text-align: left;">복잡한 목표를 하위 과업으로 분할(Decomposition)하고, 중간 실행 결과가 실패했을 때 경로를 수정(Self-Reflection)하는 제어 로직</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>도구 사용 (Tool Use)</strong></td>
+<td style="text-align: left;">외부 API 연동 모듈, 피처 추출 함수, DB 커넥터</td>
+<td style="text-align: left;">LLM이 직접 수행할 수 없는 정밀 수치 연산(ML 모델 호출), 실시간 DB 조회, 시스템 제어 등을 수행하는 외부 실행 인터페이스</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="해부-1-기억memory-아키텍처-컨텍스트-윈도우라는-제한된-작업-공간" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="해부-1-기억memory-아키텍처-컨텍스트-윈도우라는-제한된-작업-공간"><span class="header-section-number">3.2</span> 해부 1: 기억(Memory) 아키텍처 — 컨텍스트 윈도우라는 제한된 작업 공간</h2>
+<p>에이전트 설계에서 가장 먼저 부딪히는 물리적 제약은 <strong>기억의 관리</strong>다. 많은 입문자가 “최신 LLM은 입력으로 100만 토큰 이상을 받을 수 있으니 모든 과거 이력과 매뉴얼을 프롬프트에 다 넣으면 되지 않는가?”라고 생각한다. 하지만 1장에서 살펴보았듯 입력 토큰이 늘어날수록 API 비용과 응답 지연시간이 급증할 뿐만 아니라, 문맥 중간에 위치한 핵심 정보를 놓치는 현상(Lost in the Middle)이 발생한다.</p>
+<p>따라서 Sumers et al.(2024)은 <em>CoALA</em> 아키텍처에서 컴퓨터의 주기억장치(RAM)와 보조기억장치(SSD/HDD)를 분리하듯, 에이전트의 기억 장치를 <strong>작업 메모리(Working Memory)</strong>와 <strong>장기 기억(Long-term Memory)</strong>으로 엄격히 분리할 것을 제시했다.</p>
+<section id="작업-메모리-working-memory-단기-기억" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="작업-메모리-working-memory-단기-기억"><span class="header-section-number">3.2.1</span> 1. 작업 메모리 (Working Memory / 단기 기억)</h3>
+<p>에이전트가 당장 다음 행동을 결정하기 위해 참조하는 <strong>현재의 프롬프트 입력 공간(컨텍스트 윈도우)</strong>이다. 여기에는 시스템 지시문, 사용자의 최초 요청, 그리고 현재 과업을 시작하며 주고받은 도구 호출 이력(<code>messages</code> 리스트)이 담긴다. 작업 메모리는 용량이 제한되어 있고 매 스텝 비용을 유발하므로, 작업이 끝나면 초기화되거나 핵심 요약본만 장기 기억으로 이관해야 한다.</p>
+</section>
+<section id="장기-기억-long-term-memory의-3가지-세부-영역" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="장기-기억-long-term-memory의-3가지-세부-영역"><span class="header-section-number">3.2.2</span> 2. 장기 기억 (Long-term Memory)의 3가지 세부 영역</h3>
+<p>컨텍스트 윈도우 바깥의 외부 데이터베이스에 영구 보존되는 기억으로, 저장하는 정보의 성격에 따라 세 가지로 나뉜다.</p>
+<ul>
+<li><strong>일화적 기억 (Episodic Memory — 과거의 경험 기록):</strong> 에이전트가 과거에 수행했던 구체적인 작업 사례와 성공·실패 이력을 저장한다. 데이터 사이언스로 치면 <strong>과거 장애 조치 로그(Historical Logs)나 레이블링된 학습 사례</strong>와 같다. 새로운 이상 징후가 발생했을 때 과거의 유사한 해결 사례 2~3건을 검색해 작업 메모리에퓨샷(Few-shot) 예시로 넣어주면 추론 정확도가 크게 높아진다.</li>
+<li><strong>의미적 기억 (Semantic Memory — 도메인 지식과 사실):</strong> 시스템 매뉴얼, 데이터베이스 스키마 정의서, 비즈니스 규칙 등 세계에 대한 객관적인 지식 저장소다. 실무에서는 <strong>RAG(검색 증강 생성) 파이프라인과 지식 그래프</strong>로 구현한다.</li>
+<li><strong>절차적 기억 (Procedural Memory — 행동 요령과 코드):</strong> 에이전트가 과업을 수행하는 방법 자체를 담고 있는 기억이다. LLM의 가중치에 내재된 기본 추론 능력과 더불어, 개발자가 작성한 <strong>시스템 프롬프트 규칙, 상태 그래프(LangGraph)의 분기 코드, 등록된 도구(Tool)의 함수 코드</strong>가 여기에 해당한다.</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="해부-2-계획planning-메커니즘-사전-분해와-사후-복기" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="해부-2-계획planning-메커니즘-사전-분해와-사후-복기"><span class="header-section-number">3.3</span> 해부 2: 계획(Planning) 메커니즘 — 사전 분해와 사후 복기</h2>
+<p>목표가 주어졌을 때 에이전트가 단번에 정답을 내놓지 않고 체계적으로 문제를 풀어가는 과정이 <strong>계획(Planning)</strong>이다. 릴리안 웽(Weng, 2023)은 에이전트의 계획 능력을 <strong>① 하위 목표 분해(Subgoal Decomposition)</strong>와 <strong>② 자기 복기 및 교정(Self-Reflection)</strong>이라는 두 축으로 설명한다.</p>
+<section id="하위-목표-분해-큰-문제를-작게-쪼개기" class="level3" data-number="3.3.1">
+<h3 data-number="3.3.1" class="anchored" data-anchor-id="하위-목표-분해-큰-문제를-작게-쪼개기"><span class="header-section-number">3.3.1</span> 1. 하위 목표 분해: 큰 문제를 작게 쪼개기</h3>
+<p>“현재 발생한 네트워크 지연 알람의 원인을 파악해 보고서를 작성하라”는 포괄적인 지시를 받으면, 에이전트는 이를 한 번에 처리할 수 없다. 먼저 문제를 해결 가능한 작은 단위로 쪼개야 한다.</p>
+<ul>
+<li><strong>순차적 생각의 사슬 (Chain of Thought, CoT):</strong> 복잡한 문제를 여러 단계의 중간 추론 과정으로 나누어 순차적으로 생각하는 기법이다(Wei et al., 2022).</li>
+<li><strong>생각의 나무 (Tree of Thoughts, ToT):</strong> 각 단계에서 하나의 생각만 이어가는 것이 아니라 여러 개의 대안 가설을 동시에 생성하고, 각 가설의 타당성을 스스로 평가하며 깊이 우선 탐색(DFS)이나 너비 우선 탐색(BFS)으로 최적의 경로를 찾아가는 방식이다(Yao et al., 2023).</li>
+<li><strong>계획 후 실행 (Plan-and-Solve / ReWOO):</strong> 도구를 호출하기 전에 먼저 전체 작업 계획표(Step 1 ~ Step N)를 끝까지 수립한 뒤, 그 계획표에 따라 도구를 실행하는 구조다. 매 스텝마다 계획을 다시 세우지 않으므로 토큰 소모량을 줄일 수 있다.</li>
+</ul>
+</section>
+<section id="사후-복기와-피드백-루프-실패에서-배우기" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="사후-복기와-피드백-루프-실패에서-배우기"><span class="header-section-number">3.3.2</span> 2. 사후 복기와 피드백 루프: 실패에서 배우기</h3>
+<p>실무 환경에서는 첫 번째 계획대로 도구를 호출했다가 빈 검색 결과를 받거나 SQL 문법 에러를 마주하는 일이 빈번하다. 이때 에이전트가 멈추지 않고 <strong>직전 행동의 실패 원인을 분석하여 다음 행동을 수정하는 메커니즘</strong>이 복기(Reflection)다.</p>
+<p>노아 신 연구팀(Shinn et al., 2023)이 발표한 <em>Reflexion</em> 아키텍처는 강화학습의 보상(Reward) 신호를 언어적 피드백으로 대체한 대표적인 모델이다. 에이전트가 작업을 수행한 뒤 평가 모듈이 “SQL 쿼리에서 존재하지 않는 컬럼명을 참조하여 에러가 발생함”이라는 피드백을 생성하면, 에이전트는 이 오답 노트를 자신의 작업 메모리에 추가한 채로 다음 시도를 진행한다. 모델의 가중치(Weight)를 직접 파인튜닝하지 않고도, 메모리에 축적된 피드백 텍스트만으로 추론 성능을 점진적으로 개선하는 원리다.</p>
+<hr>
+</section>
+</section>
+<section id="해부-3-도구-사용tool-use-언어-모델을-현실-세계와-연결하는-손과-발" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="해부-3-도구-사용tool-use-언어-모델을-현실-세계와-연결하는-손과-발"><span class="header-section-number">3.4</span> 해부 3: 도구 사용(Tool Use) — 언어 모델을 현실 세계와 연결하는 손과 발</h2>
+<p>기억과 계획이 에이전트의 두뇌 내부에서 일어나는 인지 작용이라면, <strong>도구 사용(Tool Use)</strong>은 에이전트가 외부 환경에서 데이터를 읽어오거나(Read) 실제 조치를 실행하는(Write) 물리적 인터페이스다.</p>
+<p>티모 시크 연구팀(Schick et al., 2023)의 <em>Toolformer</em> 연구와 야오 연구팀(Yao et al., 2022)의 <em>ReAct</em> 연구가 입증했듯, LLM에게 계산기, 검색 엔진, 데이터베이스 조회 API, 그리고 전통적인 머신러닝 모델 추론기와 같은 외부 도구를 쥐여주면 모델 크기의 한계를 뛰어넘는 정확한 결과를 얻을 수 있다.</p>
+<p>여기서 주니어 개발자가 반드시 짚고 넘어가야 할 시스템적 사실이 있다. <strong>LLM은 파이썬 함수를 직접 실행하거나 데이터베이스에 접속하지 못한다.</strong> 도구 사용은 다음과 같은 철저한 역할 분담으로 이루어진다.</p>
+<ol type="1">
+<li><strong>도구 명세 확인:</strong> 개발자가 사용 가능한 함수들의 이름, 설명, 입력 인자 구조(JSON Schema)를 프롬프트에 넣어준다.</li>
+<li><strong>호출 의도 출력 (LLM):</strong> LLM은 현재 문맥을 보고 <em>“지금은 <code>get_shap_summary</code> 함수를 <code>event_id='EVT-104'</code> 인자로 실행해야겠다”</em>라는 판단을 내려 정해진 JSON 문자열을 출력한다.</li>
+<li><strong>실제 실행 및 결과 주입 (애플리케이션 런타임):</strong> 에이전트 바깥의 파이썬 런타임 코드가 이 JSON을 가로채어 실제 서버에서 함수를 실행하고, 그 결괏값(Observation)을 다시 작업 메모리에 덧붙여 LLM을 재호출한다.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="Architecture Blueprint: CoALA 프레임워크 기반 에이전트 내부 데이터 및 제어 흐름도">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Architecture Blueprint: CoALA 프레임워크 기반 에이전트 내부 데이터 및 제어 흐름도
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>다음 도식은 릴리안 웽(2023)의 3대 구성 요소와 수머스 연구팀(2024)의 <em>CoALA</em> 아키텍처를 결합하여, 하나의 이상 징후 이벤트가 에이전트 내부의 기억·계획·도구 계층을 거쳐 처리되는 전체 과정을 나타낸 설계도다.</p>
+</div>
+</div>
+<div id="cell-fig-coala-agent-architecture" class="cell" data-fig-height="6.6" data-fig-width="10" data-execution_count="2">
+<div class="cell-output cell-output-display">
+<div id="fig-coala-agent-architecture" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-coala-agent-architecture-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="post03_agent_core_architecture_files/figure-html/fig-coala-agent-architecture-output-1.png" width="1485" height="975" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-coala-agent-architecture-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.1: 작업 메모리(Working Memory)를 중심으로 장기 기억, 계획(Planning), 외부 도구(Tools)가 상호작용하는 에이전트 코어 아키텍처
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="파이썬으로-구현하며-이해하는-에이전트-코어-데이터-구조" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="파이썬으로-구현하며-이해하는-에이전트-코어-데이터-구조"><span class="header-section-number">3.5</span> 파이썬으로 구현하며 이해하는 에이전트 코어 데이터 구조</h2>
+<p>추상적인 개념을 실제 코드로 확인해 보자. 프레임워크를 사용하지 않고 순수 파이썬의 데이터 클래스(<code>dataclass</code>)만으로 위 아키텍처의 <strong>작업 메모리, 장기 기억, 계획 수립, 도구 실행</strong>이 어떻게 맞물려 돌아가는지 구현한 예제다.</p>
+<p>또한 기억과 계획 기능을 하나씩 추가했을 때(Ablation Study), 에이전트가 목표를 완수하는 데 필요한 <strong>시행착오 횟수(Steps)와 원인 진단 정확도</strong>가 어떻게 달라지는지 함께 시뮬레이션한다.</p>
+<div id="cell-fig-agent-components-ablation" class="cell" data-fig-height="6.5" data-fig-width="9" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass, field</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Callable, Any</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. [작업 메모리 (Working Memory)] 현재 과업의 문맥과 실행 이력을 관리하는 상태 객체</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WorkingMemory:</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    task_goal: <span class="bu">str</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    current_plan: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> field(default_factory<span class="op">=</span><span class="bu">list</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    observations: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> field(default_factory<span class="op">=</span><span class="bu">list</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    reflections: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> field(default_factory<span class="op">=</span><span class="bu">list</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> build_prompt_context(<span class="va">self</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""LLM에 전달할 현재 시점의 압축된 작업 메모리 문자열 생성"""</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> (</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"[목표] </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>task_goal<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"[현재 계획] </span><span class="sc">{</span><span class="st">' -&gt; '</span><span class="sc">.</span>join(<span class="va">self</span>.current_plan)<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"[누적 관찰 결과] </span><span class="sc">{</span><span class="bu">len</span>(<span class="va">self</span>.observations)<span class="sc">}</span><span class="ss">건 기록됨</span><span class="ch">\n</span><span class="ss">"</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"[사후 복기 노트] </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>reflections[<span class="op">-</span><span class="dv">1</span>] <span class="cf">if</span> <span class="va">self</span><span class="sc">.</span>reflections <span class="cf">else</span> <span class="st">'없음'</span><span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. [장기 기억 (Long-term Memory)] 과거 조치 사례(Episodic) 및 매뉴얼(Semantic) 저장소</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LongTermMemoryStore:</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.episodic_cases <span class="op">=</span> {</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">"packet_loss_rate"</span>: <span class="st">"과거 사례 #402: 패킷 손실률 급증 시 스위치 포트 CRC 에러 로그를 먼저 확인할 것."</span>,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>            <span class="st">"cpu_usage_pct"</span>: <span class="st">"과거 사례 #108: 배치 작업 시간대(02:00) CPU 급증은 정상 스케줄링일 확률이 높음."</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.semantic_manuals <span class="op">=</span> {</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">"crc_error"</span>: <span class="st">"매뉴얼 3.2절: 스위치 포트 CRC 에러가 임계치를 초과하면 광케이블 불량이므로 예비 포트로 절체한다."</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> retrieve_episode(<span class="va">self</span>, feature_name: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.episodic_cases.get(feature_name, <span class="st">"유사 과거 사례 없음"</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> retrieve_manual(<span class="va">self</span>, keyword: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.semantic_manuals.get(keyword, <span class="st">"관련 매뉴얼 없음"</span>)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. [도구 사용 (Tool Use)] 에이전트가 호출할 수 있는 외부 실행 함수 레지스트리</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ToolRegistry:</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._tools: <span class="bu">dict</span>[<span class="bu">str</span>, Callable[..., Any]] <span class="op">=</span> {}</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> register(<span class="va">self</span>, name: <span class="bu">str</span>, func: Callable[..., Any]) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>._tools[name] <span class="op">=</span> func</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> execute(<span class="va">self</span>, name: <span class="bu">str</span>, <span class="op">**</span>kwargs) <span class="op">-&gt;</span> <span class="bu">str</span>:</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> name <span class="kw">not</span> <span class="kw">in</span> <span class="va">self</span>._tools:</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="ss">f"[ToolError] 등록되지 않은 도구입니다: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">str</span>(<span class="va">self</span>._tools[name](<span class="op">**</span>kwargs))</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="co"># 에이전트 코어 구성 요소 통합 작동 확인</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>ltm <span class="op">=</span> LongTermMemoryStore()</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>tools <span class="op">=</span> ToolRegistry()</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>tools.register(<span class="st">"get_switch_crc_log"</span>, <span class="kw">lambda</span> port: <span class="ss">f"Port </span><span class="sc">{</span>port<span class="sc">}</span><span class="ss"> CRC_ERROR_COUNT=482 (임계치 10 초과)"</span>)</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>memory <span class="op">=</span> WorkingMemory(task_goal<span class="op">=</span><span class="st">"네트워크 패킷 손실률(packet_loss_rate) 급증 원인 진단"</span>)</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="co"># 장기 기억에서 과거 유사 사례를 검색해 작업 메모리의 초기 계획 수립에 반영</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>past_case <span class="op">=</span> ltm.retrieve_episode(<span class="st">"packet_loss_rate"</span>)</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>memory.current_plan <span class="op">=</span> [<span class="st">"1. 과거 사례 기반 CRC 로그 조회"</span>, <span class="st">"2. 매뉴얼 대조 후 조치안 작성"</span>]</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>memory.observations.append(past_case)</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>memory.observations.append(tools.execute(<span class="st">"get_switch_crc_log"</span>, port<span class="op">=</span><span class="st">"eth0"</span>))</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== [에이전트 작업 메모리(Working Memory) 상태 스냅샷] ==="</span>)</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(memory.build_prompt_context())</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">60</span>)</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. 구성 요소 결합 단계별(Ablation) 성능 및 효율성 비교 데이터 시각화</span></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>ablation_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>    <span class="st">"아키텍처_구성"</span>: [</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>        <span class="st">"1. LLM 단독 (도구·기억 없음)"</span>,</span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>        <span class="st">"2. LLM + 도구 사용 (단순 호출)"</span>,</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>        <span class="st">"3. LLM + 도구 + 계획/복기 (ReAct/Reflexion)"</span>,</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>        <span class="st">"4. 풀 스택 에이전트 (+장기 일화·의미 기억)"</span></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>    <span class="st">"진단_정확도_pct"</span>: [<span class="fl">32.0</span>, <span class="fl">58.5</span>, <span class="fl">84.0</span>, <span class="fl">96.5</span>],</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>    <span class="st">"평균_소요_스텝"</span>: [<span class="fl">1.0</span>, <span class="fl">7.8</span>, <span class="fl">5.2</span>, <span class="fl">2.9</span>]</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">[구성 요소 추가에 따른 진단 정확도 및 탐색 효율성 비교]"</span>)</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ablation_df.to_string(index<span class="op">=</span><span class="va">False</span>))</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">6.5</span>))</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>bar_colors <span class="op">=</span> [<span class="st">"#94a3b8"</span>, <span class="st">"#3b82f6"</span>, <span class="st">"#d97706"</span>, <span class="st">"#16a34a"</span>]</span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a><span class="co"># 상단 그래프: 구성 요소별 최종 원인 진단 정확도 (%)</span></span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>bars1 <span class="op">=</span> axes[<span class="dv">0</span>].barh(ablation_df[<span class="st">"아키텍처_구성"</span>], ablation_df[<span class="st">"진단_정확도_pct"</span>], color<span class="op">=</span>bar_colors, height<span class="op">=</span><span class="fl">0.52</span>)</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_xlim(<span class="dv">0</span>, <span class="dv">112</span>)</span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"에이전트 코어 구성 요소 결합에 따른 원인 진단 정확도 (%)"</span>, fontsize<span class="op">=</span><span class="dv">13</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, pad<span class="op">=</span><span class="dv">12</span>)</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_xlabel(<span class="st">"진단 정확도 (%) - 높을수록 우수"</span>, fontsize<span class="op">=</span><span class="dv">11</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].invert_yaxis()</span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].grid(axis<span class="op">=</span><span class="st">"x"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> bar, val <span class="kw">in</span> <span class="bu">zip</span>(bars1, ablation_df[<span class="st">"진단_정확도_pct"</span>]):</span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].text(val <span class="op">+</span> <span class="fl">1.5</span>, bar.get_y() <span class="op">+</span> bar.get_height()<span class="op">/</span><span class="dv">2</span>, <span class="ss">f"</span><span class="sc">{</span>val<span class="sc">:.1f}</span><span class="ss">%"</span>,</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>                 va<span class="op">=</span><span class="st">"center"</span>, ha<span class="op">=</span><span class="st">"left"</span>, fontsize<span class="op">=</span><span class="fl">10.5</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, color<span class="op">=</span><span class="st">"#111827"</span>)</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a><span class="co"># 하단 그래프: 문제 해결까지 소요된 평균 도구 호출 스텝 수</span></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>bars2 <span class="op">=</span> axes[<span class="dv">1</span>].barh(ablation_df[<span class="st">"아키텍처_구성"</span>], ablation_df[<span class="st">"평균_소요_스텝"</span>], color<span class="op">=</span>bar_colors, height<span class="op">=</span><span class="fl">0.52</span>)</span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_xlim(<span class="dv">0</span>, <span class="fl">9.5</span>)</span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"목표 달성까지 소요된 평균 탐색 스텝 수 (Steps)"</span>, fontsize<span class="op">=</span><span class="dv">13</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, pad<span class="op">=</span><span class="dv">12</span>)</span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_xlabel(<span class="st">"평균 실행 스텝 수 - 낮을수록 불필요한 시행착오가 적음"</span>, fontsize<span class="op">=</span><span class="dv">11</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)</span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].invert_yaxis()</span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].grid(axis<span class="op">=</span><span class="st">"x"</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> bar, val <span class="kw">in</span> <span class="bu">zip</span>(bars2, ablation_df[<span class="st">"평균_소요_스텝"</span>]):</span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>    label_txt <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>val<span class="sc">:.1f}</span><span class="ss"> 스텝 (추측 답변)"</span> <span class="cf">if</span> val <span class="op">==</span> <span class="fl">1.0</span> <span class="cf">else</span> <span class="ss">f"</span><span class="sc">{</span>val<span class="sc">:.1f}</span><span class="ss"> 스텝"</span></span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].text(val <span class="op">+</span> <span class="fl">0.18</span>, bar.get_y() <span class="op">+</span> bar.get_height()<span class="op">/</span><span class="dv">2</span>, label_txt,</span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>                 va<span class="op">=</span><span class="st">"center"</span>, ha<span class="op">=</span><span class="st">"left"</span>, fontsize<span class="op">=</span><span class="fl">10.5</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, color<span class="op">=</span><span class="st">"#111827"</span>)</span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== [에이전트 작업 메모리(Working Memory) 상태 스냅샷] ===
+[목표] 네트워크 패킷 손실률(packet_loss_rate) 급증 원인 진단
+[현재 계획] 1. 과거 사례 기반 CRC 로그 조회 -&gt; 2. 매뉴얼 대조 후 조치안 작성
+[누적 관찰 결과] 2건 기록됨
+[사후 복기 노트] 없음
+------------------------------------------------------------
+
+[구성 요소 추가에 따른 진단 정확도 및 탐색 효율성 비교]
+                              아키텍처_구성  진단_정확도_pct  평균_소요_스텝
+                 1. LLM 단독 (도구·기억 없음)        32.0       1.0
+               2. LLM + 도구 사용 (단순 호출)        58.5       7.8
+3. LLM + 도구 + 계획/복기 (ReAct/Reflexion)        84.0       5.2
+          4. 풀 스택 에이전트 (+장기 일화·의미 기억)        96.5       2.9</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div id="fig-agent-components-ablation" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-agent-components-ablation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="post03_agent_core_architecture_files/figure-html/fig-agent-components-ablation-output-2.png" width="1333" height="957" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-agent-components-ablation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.2: 에이전트 구성 요소(도구, 계획, 일화적 기억) 결합 단계별 원인 진단 정확도(상단) 및 평균 소요 스텝 수(하단) 비교
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="코드-및-실험-결과-해설" class="level3" data-number="3.5.1">
+<h3 data-number="3.5.1" class="anchored" data-anchor-id="코드-및-실험-결과-해설"><span class="header-section-number">3.5.1</span> 코드 및 실험 결과 해설</h3>
+<p>위 코드와 그래프는 왜 에이전트의 세 가지 구성 요소(도구, 계획, 기억)가 유기적으로 결합되어야 하는지를 잘 보여준다.</p>
+<ol type="1">
+<li><strong>도구만 주고 계획과 기억이 없을 때 (<code>2. LLM + 도구 사용</code>):</strong> 에이전트가 데이터베이스와 매뉴얼을 조회할 수는 있지만, 어떤 순서로 조사해야 할지 몰라 무작위로 테이블을 뒤지느라 평균 <code>7.8스텝</code>을 소모하고도 정확도는 <code>58.5%</code>에 그친다.</li>
+<li><strong>계획과 사후 복기를 추가했을 때 (<code>3. + 계획/복기</code>):</strong> 하위 목표를 먼저 세우고, 잘못된 쿼리를 날렸을 때 스스로 오류를 수정(Reflexion)하면서 정확도가 <code>84.0%</code>로 크게 상승하고 스텝 수도 <code>5.2스텝</code>으로 줄어든다.</li>
+<li><strong>장기 기억(과거 사례)까지 연결했을 때 (<code>4. 풀 스택 에이전트</code>):</strong> 조사를 시작하기 전에 일화적 기억(Episodic Memory)에서 <em>“패킷 손실률 급증 시 스위치 포트 CRC 에러 로그부터 확인하라”</em>는 과거의 경험 기록을 먼저 불러온다. 덕분에 엉뚱한 도구를 호출하는 시행착오 없이 단 <strong><code>2.9스텝</code></strong> 만에 <strong><code>96.5%</code></strong>의 정확도로 원인을 찾아낸다.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="실무-메모리-설계의-핵심-무작정-쌓아두기-vs.-정제하여-기억하기" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="실무-메모리-설계의-핵심-무작정-쌓아두기-vs.-정제하여-기억하기"><span class="header-section-number">3.6</span> 실무 메모리 설계의 핵심: 무작정 쌓아두기 vs.&nbsp;정제하여 기억하기</h2>
+<p>에이전트 코어를 구현할 때 주니어 개발자들이 가장 많이 범하는 설계 오류는 <strong>작업 메모리(컨텍스트 윈도우)를 쓰레기통처럼 사용하는 것</strong>이다. 도구가 반환한 수천 줄의 원본 JSON이나 에러 스택 트레이스(Stack Trace)를 정제하지 않고 메시지 리스트에 그대로 계속 추가(<code>append</code>)하는 방식이다.</p>
+<p>이렇게 작업 메모리가 오염되면 앞서 2장에서 살펴본 것처럼 토큰 비용이 이차 함수(<span class="math inline">\(O(k^2)\)</span>)로 폭증할 뿐만 아니라, 이전 단계의 실패했던 기록이 다음 단계의 추론을 방해하는 <strong>문맥 간섭(Context Interference)</strong> 현상이 발생한다.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="Eval Lab &amp; Failure Log: 작업 메모리 오염(Context Pollution)에 따른 추론 붕괴와 개선">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Eval Lab &amp; Failure Log: 작업 메모리 오염(Context Pollution)에 따른 추론 붕괴와 개선
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>복합 장애를 조사하는 에이전트가 5번의 도구를 호출하는 과정에서, 모든 원본 결과를 작업 메모리에 그대로 누적했을 때 발생하는 문제와 <strong>‘상태 요약 및 구조화된 메모리 분리’</strong>를 적용했을 때의 성능 차이를 비교한 실험이다.</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">평가 항목</th>
+<th style="text-align: left;">❌ 실패 사례: 모든 도구 출력 원본을 메시지 리스트에 단순 누적 (<code>append</code>)</th>
+<th style="text-align: left;">✅ 개선 사례: 작업 메모리 요약 정제 + 장기 기억 분리 아키텍처</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>메모리 관리 방식</strong></td>
+<td style="text-align: left;">1~5스텝 동안 조회한 원본 SQL 테이블 행(Row)과 에러 로그 전문을 대화 히스토리에 그대로 쌓아둠</td>
+<td style="text-align: left;">도구가 반환한 결과에서 핵심 수치와 사실만 3줄 이내로 요약하여 <code>WorkingMemory</code>에 기록하고, 원본 데이터는 별도 스토리지에 분리 보관</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>발생한 문제점</strong></td>
+<td style="text-align: left;">• <strong>문맥 희석:</strong> 4번째 스텝부터 입력 토큰이 15,000개를 넘어가며, 1번째 스텝에서 찾았던 핵심 SHAP 원인 변수를 잊어버림<br>• <strong>오류 복제:</strong> 2번째 스텝에서 발생했던 잘못된 SQL 문법을 5번째 스텝에서 그대로 다시 따라 침</td>
+<td style="text-align: left;">• 매 스텝 작업 메모리 크기가 1,200 토큰 이내로 일정하게 유지됨<br>• <code>reflections</code> 필드에 <em>“주의: <code>server_log</code> 테이블에는 <code>loss_pct</code> 컬럼이 없음”</em>이라는 교훈만 명확히 남겨 동일한 실수 재발 방지</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>5스텝 누적 입력 토큰</strong></td>
+<td style="text-align: left;"><strong>42,500 토큰</strong></td>
+<td style="text-align: left;"><strong>5,400 토큰 (87.3% 절감)</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>최종 과제 완수율</strong></td>
+<td style="text-align: left;"><strong>51.0%</strong> (후반부 스텝에서 목표 상실)</td>
+<td style="text-align: left;"><strong>95.0%</strong></td>
+</tr>
+</tbody>
+</table>
+<p>실제 프로덕션 코드에서는 작업 메모리가 비대해지는 것을 막기 위해, 도구의 실행 결과를 작업 메모리에 넣기 전 다음과 같이 <strong>구조화된 상태 객체(State Object)</strong>로 압축하여 관리해야 한다.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ❌ 피해야 할 방식: 날것의 도구 실행 결과를 메시지 히스토리에 무작정 누적</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>messages.append({</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"role"</span>: <span class="st">"tool"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"content"</span>: raw_sql_result_with_500_rows_and_verbose_logs  <span class="co"># 수천 토큰이 매 스텝 재전송됨</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ 권장하는 실무 방식: 핵심 사실(Fact)과 오답 노트(Reflection)만 정제하여 상태 갱신</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>structured_state <span class="op">=</span> {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"goal"</span>: <span class="st">"기지국 #204 패킷 손실 급증 원인 규명"</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"verified_facts"</span>: [</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">"SHAP 분석 결과: packet_loss_rate(+0.41), tcp_retransmission(+0.28) 급증 확인"</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"스위치 로그 조회 결과: eth0 포트에서 CRC 에러 482건 발생 확인"</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"failed_attempts_reflection"</span>: [</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"traffic_raw 테이블 직접 조회 시 타임아웃 발생 -&gt; 집계 뷰(traffic_summary_10m)를 사용할 것"</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"next_planned_step"</span>: <span class="st">"매뉴얼 DB에서 '스위치 포트 CRC 에러' 복구 절차 검색"</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>이처럼 에이전트의 지능은 단순히 더 큰 LLM을 쓴다고 해서 높아지지 않는다. <strong>장기 기억에서 얼마나 정확한 경험과 지식을 꺼내오는가(Memory)</strong>, <strong>작업 메모리를 얼마나 깨끗하게 유지하며 다음 단계를 설계하는가(Planning)</strong>, 그리고 <strong>외부 세계와 얼마나 정교하게 상호작용하는가(Tool Use)</strong>라는 세 가지 톱니바퀴가 맞물릴 때 비로소 신뢰할 수 있는 에이전트가 완성된다.</p>
+<p>다음 장에서는 에이전트의 세 가지 구성 요소 중 ’계획(Planning)’과 ’도구 사용(Tool Use)’이 실제 런타임에서 어떻게 하나의 루프로 결합되는지 이해하기 위해, 에이전트 연구의 가장 중요한 이정표인 <strong>CoT, ReAct, 그리고 Reflexion 논문</strong>의 작동 메커니즘을 깊이 있게 파헤친다.</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Production Checklist: 실무 프로젝트 설계 전 핵심 점검표">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Production Checklist: 실무 프로젝트 설계 전 핵심 점검표
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul class="task-list">
+<li><label><input type="checkbox"><strong>작업 메모리 용량 통제:</strong> 도구가 반환한 수백 줄의 원본 데이터(JSON, 테이블, 긴 문서)를 정제 없이 LLM 컨텍스트 윈도우에 그대로 누적하고 있지 않은가?</label></li>
+<li><label><input type="checkbox"><strong>장기 기억의 역할 분리:</strong> 에이전트에게 제공할 지식을 단순 매뉴얼(의미적 기억)에만 의존하지 않고, 과거의 성공적인 문제 해결 사례(일화적 기억)를 함께 검색해 제공하도록 설계했는가?</label></li>
+<li><label><input type="checkbox"><strong>오답 노트(Reflection) 기록:</strong> 도구 호출이 실패했을 때 단순히 똑같은 호출을 재시도(<code>retry</code>)하는 데 그치지 않고, ’왜 실패했는지’를 작업 메모리에 명시하여 에이전트가 다른 우회 경로를 찾도록 유도하고 있는가?</label></li>
+<li><label><input type="checkbox"><strong>LLM과 도구 실행의 분리:</strong> LLM은 호출할 도구의 이름과 인자만 결정하고, 실제 데이터베이스 접속이나 수치 계산은 외부 파이썬 런타임과 전통적 ML 모델이 안전하게 수행하도록 권한이 분리되어 있는가?</label></li>
+</ul>
+</div>
+</div>
+<hr>
+</section>
+<section id="참고문헌-references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="참고문헌-references">참고문헌 (References)</h2>
+<ol type="1">
+<li>Weng, L. (2023). <em>LLM Powered Autonomous Agents.</em> Lil’Log (OpenAI Technical Blog).</li>
+<li>Sumers, T. R., Yao, S., Narasimhan, K., &amp; Griffiths, T. L. (2024). <em>Cognitive Architectures for Language Agents (CoALA).</em> Transactions on Machine Learning Research (TMLR).</li>
+<li>Wei, J., Wang, X., Schuurmans, D., Bosma, M., Ichter, B., Xia, F., … &amp; Zhou, D. (2022). <em>Chain-of-Thought Prompting Elicits Reasoning in Large Language Models.</em> Advances in Neural Information Processing Systems (NeurIPS), 35, 24824-24837.</li>
+<li>Yao, S., Yu, D., Zhao, J., Shafran, I., Griffiths, T., Cao, Y., &amp; Narasimhan, K. (2023). <em>Tree of Thoughts: Deliberate Problem Solving with Large Language Models.</em> Advances in Neural Information Processing Systems (NeurIPS), 36.</li>
+<li>Shinn, N., Cassano, F., Gopinath, A., Narasimhan, K., &amp; Yao, S. (2023). <em>Reflexion: Language Agents with Verbal Reinforcement Learning.</em> Advances in Neural Information Processing Systems (NeurIPS), 36.</li>
+<li>Schick, T., Dwivedi-Yu, J., Dessì, R., Raileanu, R., Lomeli, M., Hambro, E., … &amp; Scialom, T. (2023). <em>Toolformer: Language Models Can Teach Themselves to Use Tools.</em> Advances in Neural Information Processing Systems (NeurIPS), 36.</li>
+</ol>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part1/post02_workflow_vs_agent.html" class="pagination-link" aria-label="Workflow vs. Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part1/post04_cot_react_reflexion.html" class="pagination-link" aria-label="추론(Reasoning)과 행동(Acting)의 루프: CoT에서 ReAct, Reflexion까지">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">추론(Reasoning)과 행동(Acting)의 루프: CoT에서 ReAct, Reflexion까지</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jiwoongme/compound-ai-book/edit/main/part1/post03_agent_core_architecture.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jiwoongme/compound-ai-book/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리 – 예측 모델을 넘어 자율 에이전트로</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part1/post03_agent_core_architecture.html" rel="next">
+<link href="../part1/post01_why_compound_ai.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-36f2db2e0c24a8dfe38894d2c7306603.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1/post01_why_compound_ai.html">Part 1. 단일 모델에서 복합 AI 시스템으로</a></li><li class="breadcrumb-item"><a href="../part1/post02_workflow_vs_agent.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">예측 모델을 넘어 자율 에이전트로</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/jiwoongme/compound-ai-book" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">서문: 데이터 사이언티스트를 위한 에이전트 엔지니어링</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part 1. 단일 모델에서 복합 AI 시스템으로</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post01_why_compound_ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">왜 거대언어모델(LLM) 하나로는 실무 문제를 풀 수 없는가?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post02_workflow_vs_agent.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post03_agent_core_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post04_cot_react_reflexion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">추론(Reasoning)과 행동(Acting)의 루프: CoT에서 ReAct, Reflexion까지</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post05_tool_calling_and_mcp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">post05_tool_calling_and_mcp.html</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">참고문헌 (References)</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#제어권의-소재로-구분하는-에이전틱-시스템agentic-systems" id="toc-제어권의-소재로-구분하는-에이전틱-시스템agentic-systems" class="nav-link active" data-scroll-target="#제어권의-소재로-구분하는-에이전틱-시스템agentic-systems"><span class="header-section-number">2.1</span> 제어권의 소재로 구분하는 에이전틱 시스템(Agentic Systems)</a>
+  <ul class="collapse">
+  <li><a href="#워크플로우workflows-코드에-의해-사전-정의된-경로" id="toc-워크플로우workflows-코드에-의해-사전-정의된-경로" class="nav-link" data-scroll-target="#워크플로우workflows-코드에-의해-사전-정의된-경로"><span class="header-section-number">2.1.1</span> 1. 워크플로우(Workflows): 코드에 의해 사전 정의된 경로</a></li>
+  <li><a href="#에이전트agents-llm에-의해-동적으로-결정되는-경로" id="toc-에이전트agents-llm에-의해-동적으로-결정되는-경로" class="nav-link" data-scroll-target="#에이전트agents-llm에-의해-동적으로-결정되는-경로"><span class="header-section-number">2.1.2</span> 2. 에이전트(Agents): LLM에 의해 동적으로 결정되는 경로</a></li>
+  </ul></li>
+  <li><a href="#엔터프라이즈-표준-디자인-패턴-6가지-해부" id="toc-엔터프라이즈-표준-디자인-패턴-6가지-해부" class="nav-link" data-scroll-target="#엔터프라이즈-표준-디자인-패턴-6가지-해부"><span class="header-section-number">2.2</span> 엔터프라이즈 표준 디자인 패턴 6가지 해부</a>
+  <ul class="collapse">
+  <li><a href="#패턴-1.-프롬프트-체이닝-prompt-chaining-workflow" id="toc-패턴-1.-프롬프트-체이닝-prompt-chaining-workflow" class="nav-link" data-scroll-target="#패턴-1.-프롬프트-체이닝-prompt-chaining-workflow"><span class="header-section-number">2.2.1</span> 패턴 1. 프롬프트 체이닝 (Prompt Chaining — Workflow)</a></li>
+  <li><a href="#패턴-2.-라우팅-routing-workflow" id="toc-패턴-2.-라우팅-routing-workflow" class="nav-link" data-scroll-target="#패턴-2.-라우팅-routing-workflow"><span class="header-section-number">2.2.2</span> 패턴 2. 라우팅 (Routing — Workflow)</a></li>
+  <li><a href="#패턴-3.-병렬화-parallelization-workflow" id="toc-패턴-3.-병렬화-parallelization-workflow" class="nav-link" data-scroll-target="#패턴-3.-병렬화-parallelization-workflow"><span class="header-section-number">2.2.3</span> 패턴 3. 병렬화 (Parallelization — Workflow)</a></li>
+  <li><a href="#패턴-4.-오케스트레이터-워커-orchestrator-workers-hybrid-workflow" id="toc-패턴-4.-오케스트레이터-워커-orchestrator-workers-hybrid-workflow" class="nav-link" data-scroll-target="#패턴-4.-오케스트레이터-워커-orchestrator-workers-hybrid-workflow"><span class="header-section-number">2.2.4</span> 패턴 4. 오케스트레이터-워커 (Orchestrator-Workers — Hybrid Workflow)</a></li>
+  <li><a href="#패턴-5.-평가자-최적화기-evaluator-optimizer-workflow-loop" id="toc-패턴-5.-평가자-최적화기-evaluator-optimizer-workflow-loop" class="nav-link" data-scroll-target="#패턴-5.-평가자-최적화기-evaluator-optimizer-workflow-loop"><span class="header-section-number">2.2.5</span> 패턴 5. 평가자-최적화기 (Evaluator-Optimizer — Workflow Loop)</a></li>
+  <li><a href="#패턴-6.-자율-에이전트-autonomous-agent" id="toc-패턴-6.-자율-에이전트-autonomous-agent" class="nav-link" data-scroll-target="#패턴-6.-자율-에이전트-autonomous-agent"><span class="header-section-number">2.2.6</span> 패턴 6. 자율 에이전트 (Autonomous Agent)</a></li>
+  </ul></li>
+  <li><a href="#자율성의-대가-복합-오류compound-error와-비용의-수리적-분석" id="toc-자율성의-대가-복합-오류compound-error와-비용의-수리적-분석" class="nav-link" data-scroll-target="#자율성의-대가-복합-오류compound-error와-비용의-수리적-분석"><span class="header-section-number">2.3</span> 자율성의 대가: 복합 오류(Compound Error)와 비용의 수리적 분석</a>
+  <ul class="collapse">
+  <li><a href="#시뮬레이션-결과-해석" id="toc-시뮬레이션-결과-해석" class="nav-link" data-scroll-target="#시뮬레이션-결과-해석"><span class="header-section-number">2.3.1</span> 시뮬레이션 결과 해석</a></li>
+  </ul></li>
+  <li><a href="#실무-아키텍처-선택을-위한-4단계-의사결정-기준" id="toc-실무-아키텍처-선택을-위한-4단계-의사결정-기준" class="nav-link" data-scroll-target="#실무-아키텍처-선택을-위한-4단계-의사결정-기준"><span class="header-section-number">2.4</span> 실무 아키텍처 선택을 위한 4단계 의사결정 기준</a></li>
+  <li><a href="#참고문헌-references" id="toc-참고문헌-references" class="nav-link" data-scroll-target="#참고문헌-references">참고문헌 (References)</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jiwoongme/compound-ai-book/edit/main/part1/post02_workflow_vs_agent.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jiwoongme/compound-ai-book/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1/post01_why_compound_ai.html">Part 1. 단일 모델에서 복합 AI 시스템으로</a></li><li class="breadcrumb-item"><a href="../part1/post02_workflow_vs_agent.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>앞 장에서는 정형 데이터와 시계열 스트림을 다루는 엔터프라이즈 환경에서 왜 단일 거대언어모델(LLM) 대신 전통적인 머신러닝·딥러닝 모델과 LLM을 결합한 복합 AI 시스템(Compound AI Systems)을 구축해야 하는지 살펴보았다. 전방의 머신러닝 모델(System 1)이 이상 징후를 감지하여 후방의 언어 모델 계층(System 2)을 호출하기로 결정했다면, 아키텍트는 곧바로 두 번째 설계 질문과 마주하게 된다.</p>
+<blockquote class="blockquote">
+<p><em>“후방의 언어 모델 계층을 설계할 때, 개발자가 실행 순서를 코드로 고정한 <strong>워크플로우(Workflow)</strong>로 구현할 것인가, 아니면 LLM이 스스로 다음 행동을 결정하고 루프를 도는 <strong>자율 에이전트(Autonomous Agent)</strong>로 구현할 것인가?”</em></p>
+</blockquote>
+<p>최근 산업계에서는 LLM을 두 번 이상 연속으로 호출하거나 외부 API를 연결하기만 하면 모두 ’에이전트’라고 부르는 경향이 있다. 그러나 시스템 엔지니어링 관점에서 워크플로우와 에이전트는 제어권의 소재(Locus of Control), 비용 구조, 실패 확률 분포가 전혀 다른 아키텍처다. 정해진 절차만으로 해결할 수 있는 문제에 자율 에이전트를 도입하면 불필요한 토큰 비용과 지연시간이 발생할 뿐 아니라, 무한 루프나 예측 불가능한 도구 호출로 인해 시스템 안정성이 크게 훼손된다.</p>
+<p>본 장에서는 앤트로픽(Anthropic)의 엔지니어링 지침(<em>“Building Effective Agents”</em>, Schluntz &amp; Zhang, 2024)과 프린스턴 대학교 연구진의 벤치마크 분석(<em>“AI Agents That Matter”</em>, Kapoor et al., 2024)을 바탕으로 두 아키텍처의 공학적 경계를 정의하고, 문제의 복잡도와 오류 허용치에 따라 최적의 구조를 선택하는 의사결정 프레임워크를 수립한다.</p>
+<hr>
+<section id="제어권의-소재로-구분하는-에이전틱-시스템agentic-systems" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="제어권의-소재로-구분하는-에이전틱-시스템agentic-systems"><span class="header-section-number">2.1</span> 제어권의 소재로 구분하는 에이전틱 시스템(Agentic Systems)</h2>
+<p>2024년 12월, 앤트로픽의 에릭 슐룬츠와 배리 장(Schluntz &amp; Zhang, 2024)은 수십 개의 엔터프라이즈 AI 구축 사례를 분석하여 포괄적인 의미의 <strong>에이전틱 시스템(Agentic Systems)</strong>을 제어 구조에 따라 두 가지 하위 범주로 엄격히 분류했다. 구분의 핵심 기준은 <strong>“시스템의 실행 경로(Control Flow)를 누가 결정하는가”</strong>이다.</p>
+<section id="워크플로우workflows-코드에-의해-사전-정의된-경로" class="level3" data-number="2.1.1">
+<h3 data-number="2.1.1" class="anchored" data-anchor-id="워크플로우workflows-코드에-의해-사전-정의된-경로"><span class="header-section-number">2.1.1</span> 1. 워크플로우(Workflows): 코드에 의해 사전 정의된 경로</h3>
+<p>워크플로우는 LLM과 도구(Tool)들이 <strong>사전에 작성된 결정론적 코드(Deterministic Code)</strong>의 통제하에 정해진 순서대로 호출되는 시스템이다.</p>
+<p>예를 들어 <code>"1단계: 이상탐지 모델의 SHAP 상위 변수 추출 -&gt; 2단계: 해당 변수명으로 사내 매뉴얼 검색 -&gt; 3단계: 검색된 문서를 바탕으로 요약 보고서 생성"</code>이라는 파이프라인이 있다면, 각 단계 사이에서 어떤 함수를 호출할지는 파이썬 코드(<code>if-else</code> 분기문이나 순차 함수 호출)가 결정한다. LLM은 각 단계 내부에서 텍스트를 분류하거나 요약하는 제한된 역할만 수행할 뿐, 전체 파이프라인의 실행 순서를 임의로 바꾸지 못한다.</p>
+</section>
+<section id="에이전트agents-llm에-의해-동적으로-결정되는-경로" class="level3" data-number="2.1.2">
+<h3 data-number="2.1.2" class="anchored" data-anchor-id="에이전트agents-llm에-의해-동적으로-결정되는-경로"><span class="header-section-number">2.1.2</span> 2. 에이전트(Agents): LLM에 의해 동적으로 결정되는 경로</h3>
+<p>반면 좁은 의미의 자율 에이전트는 <strong>LLM이 스스로 추론 과정과 도구 사용 방식을 동적으로 지시(Dynamically direct)</strong>하는 시스템이다.</p>
+<p>개발자는 에이전트에게 달성해야 할 최종 목표(Goal)와 사용할 수 있는 도구들의 목록(Tools)만 제공한다. 작업을 완수하기 위해 어떤 도구를 어떤 순서로 호출할지, 도구의 실행 결과가 불충분할 때 검색어를 바꿔서 다시 시도할지, 아니면 작업이 완료되었다고 판단하여 루프를 종료할지에 대한 제어권이 전적으로 LLM의 런타임 판단에 위임된다.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="DS Bridge: 기존 ML 개념과 에이전트 개념 1:1 매칭하기">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>DS Bridge: 기존 ML 개념과 에이전트 개념 1:1 매칭하기
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>머신러닝 엔지니어에게 익숙한 모델과 파이프라인의 개념을 빌려오면, 워크플로우와 에이전트의 차이는 <strong>고정된 추론 그래프(Static Computation Graph)</strong>와 <strong>상태 기반 강화학습 정책(State-driven Policy)</strong>의 차이로 명확히 대응된다.</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">비교 기준</th>
+<th style="text-align: left;">워크플로우 (Workflow)</th>
+<th style="text-align: left;">자율 에이전트 (Autonomous Agent)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>전통적 ML 대응 개념</strong></td>
+<td style="text-align: left;">Airflow/Kubeflow 기반의 정적 DAG 파이프라인, 고정 깊이 결정 트리</td>
+<td style="text-align: left;">마르코프 결정 과정(MDP)에서 상태(<span class="math inline">\(s_t\)</span>)를 관찰하며 행동(<span class="math inline">\(a_t\)</span>)을 선택하는 정책(<span class="math inline">\(\pi\)</span>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>제어권의 소재</strong></td>
+<td style="text-align: left;"><strong>개발자가 작성한 애플리케이션 코드</strong> (<code>if/else</code>, <code>for</code> 루프)</td>
+<td style="text-align: left;"><strong>LLM의 런타임 추론</strong> (<code>while not done:</code> 내부의 동적 분기)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>실행 단계 수 (Steps)</strong></td>
+<td style="text-align: left;">사전에 확정됨 (예: 정확히 3단계 실행 후 종료)</td>
+<td style="text-align: left;">입력 데이터와 환경 피드백에 따라 가변적임 (종료 시점 예측 불가)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>지연시간 및 비용</strong></td>
+<td style="text-align: left;">상한선(Upper Bound)이 명확하여 예산 산정이 용이함</td>
+<td style="text-align: left;">탐색 실패 및 재시도 발생 시 토큰 소모량과 지연시간이 급증함</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>주요 디버깅 대상</strong></td>
+<td style="text-align: left;">개별 단계의 프롬프트 입출력 및 분기 조건문</td>
+<td style="text-align: left;">다단계 추론 궤적(Trajectory), 도구 선택 오류, 루프 종료 조건</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="엔터프라이즈-표준-디자인-패턴-6가지-해부" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="엔터프라이즈-표준-디자인-패턴-6가지-해부"><span class="header-section-number">2.2</span> 엔터프라이즈 표준 디자인 패턴 6가지 해부</h2>
+<p>실무에서 구축되는 복합 AI 시스템은 완전히 고정된 단일 호출부터 완전 자율 에이전트까지 연속적인 스펙트럼 위에 존재한다. Schluntz &amp; Zhang(2024)이 정립한 5가지 워크플로우 패턴과 1가지 자율 에이전트 패턴의 작동 원리 및 적용 시나리오는 다음과 같다.</p>
+<section id="패턴-1.-프롬프트-체이닝-prompt-chaining-workflow" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="패턴-1.-프롬프트-체이닝-prompt-chaining-workflow"><span class="header-section-number">2.2.1</span> 패턴 1. 프롬프트 체이닝 (Prompt Chaining — Workflow)</h3>
+<p>하나의 복잡한 작업을 여러 개의 순차적인 하위 작업(Sub-tasks)으로 분할하고, 앞 단계 LLM의 출력을 다음 단계 LLM의 입력으로 전달하는 가장 기본적인 파이프라인이다. 중간 단계에 파이썬 코드로 작성된 <strong>프로그래밍 방식의 검증 게이트(Programmatic Gate)</strong>를 배치하여 출력 형식이 잘못되었거나 필수 정보가 누락되었을 때 즉시 흐름을 중단하거나 재시도할 수 있다. * <strong>적합한 실무 사례:</strong> 정형화된 일일 장애 리포트 생성 (1단계: 로그 데이터에서 핵심 지표 요약 <span class="math inline">\(\rightarrow\)</span> 코드 검증: 필수 메트릭 포함 여부 확인 <span class="math inline">\(\rightarrow\)</span> 2단계: 임원 보고용 양식으로 변환).</p>
+</section>
+<section id="패턴-2.-라우팅-routing-workflow" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="패턴-2.-라우팅-routing-workflow"><span class="header-section-number">2.2.2</span> 패턴 2. 라우팅 (Routing — Workflow)</h3>
+<p>입력된 요청이나 이벤트의 성격을 먼저 분류(Classification)한 뒤, 각 유형에 특화된 후속 프롬프트, 모델, 또는 파이프라인으로 분기시키는 구조다. 앞서 1장에서 다룬 전통적 ML 분류 모델이나 경량 언어 모델(SLM)을 라우터로 활용하면 시스템 전체 비용을 크게 낮출 수 있다. * <strong>적합한 실무 사례:</strong> 고객 문의 및 시스템 알람 분류 (단순 상태 조회 요청은 경량 모델 및 SQL 조회 파이프라인으로 보내고, 복합 장애 알람은 고성능 추론 모델로 라우팅).</p>
+</section>
+<section id="패턴-3.-병렬화-parallelization-workflow" class="level3" data-number="2.2.3">
+<h3 data-number="2.2.3" class="anchored" data-anchor-id="패턴-3.-병렬화-parallelization-workflow"><span class="header-section-number">2.2.3</span> 패턴 3. 병렬화 (Parallelization — Workflow)</h3>
+<p>독립적인 여러 하위 작업을 동시에 실행한 뒤 결과를 코드로 취합(Aggregation)하는 패턴이다. 크게 두 가지 방식으로 나뉜다. 1. <strong>섹셔닝(Sectioning):</strong> 하나의 작업을 서로 다른 하위 항목으로 쪼개어 병렬 처리한다. 예를 들어 한 모델이 사용자 질문에 대한 답변을 생성하는 동안, 별도의 모델이나 분류기가 동시에 해당 입력의 보안 정책 위반 여부(Guardrail)를 검사한다. 2. <strong>보팅(Voting):</strong> 동일한 작업을 여러 모델이나 서로 다른 프롬프트로 동시에 실행한 뒤 다수결로 최종 결과를 채택한다. 머신러닝의 <strong>배깅(Bagging)이나 앙상블(Ensemble)</strong> 기법과 동일한 원리로 작동하며, 고위험 코드 취약점 검토나 다각도 문서 검증에 활용된다.</p>
+</section>
+<section id="패턴-4.-오케스트레이터-워커-orchestrator-workers-hybrid-workflow" class="level3" data-number="2.2.4">
+<h3 data-number="2.2.4" class="anchored" data-anchor-id="패턴-4.-오케스트레이터-워커-orchestrator-workers-hybrid-workflow"><span class="header-section-number">2.2.4</span> 패턴 4. 오케스트레이터-워커 (Orchestrator-Workers — Hybrid Workflow)</h3>
+<p>고정된 워크플로우에서 자율 에이전트로 넘어가는 징검다리 패턴이다. 중앙의 <strong>오케스트레이터(Orchestrator) LLM</strong>이 입력된 문제를 분석하여 필요한 하위 작업들을 동적으로 계획하고, 이를 여러 전문 <strong>워커(Worker) LLM</strong>에게 할당한 뒤 결과를 종합한다. 패턴 3(병렬화)과의 결정적인 차이는 <strong>하위 작업의 개수와 내용이 사전에 코드로 고정되어 있지 않고, 입력 문제에 따라 오케스트레이터가 실시간으로 결정한다</strong>는 점이다. * <strong>적합한 실무 사례:</strong> 다수의 마이크로서비스나 코드 파일이 얽혀 있어, 사전에 몇 개의 파일을 수정해야 할지 알 수 없는 소프트웨어 패치 작업 및 복합 시스템 영향도 분석.</p>
+</section>
+<section id="패턴-5.-평가자-최적화기-evaluator-optimizer-workflow-loop" class="level3" data-number="2.2.5">
+<h3 data-number="2.2.5" class="anchored" data-anchor-id="패턴-5.-평가자-최적화기-evaluator-optimizer-workflow-loop"><span class="header-section-number">2.2.5</span> 패턴 5. 평가자-최적화기 (Evaluator-Optimizer — Workflow Loop)</h3>
+<p>하나의 LLM(생성기, Generator)이 초안을 작성하면, 별도의 기준을 가진 평가 모듈(Evaluator LLM 또는 검증 코드)이 이를 채점하고 구체적인 피드백을 반환하여 기준을 통과할 때까지 반복 개선하는 루프 구조다. 머신러닝의 반복적 최적화(Iterative Optimization) 과정과 유사하다. * <strong>적합한 실무 사례:</strong> Text-to-SQL 쿼리 생성 및 검증 (생성기가 SQL을 작성 <span class="math inline">\(\rightarrow\)</span> 평가기가 실제 DB 실행 계획 및 문법 오류 검증 <span class="math inline">\(\rightarrow\)</span> 오류 메시지를 바탕으로 쿼리 수정).</p>
+</section>
+<section id="패턴-6.-자율-에이전트-autonomous-agent" class="level3" data-number="2.2.6">
+<h3 data-number="2.2.6" class="anchored" data-anchor-id="패턴-6.-자율-에이전트-autonomous-agent"><span class="header-section-number">2.2.6</span> 패턴 6. 자율 에이전트 (Autonomous Agent)</h3>
+<p>사전에 정의된 단계 없이, LLM이 환경(Environment)과 직접 상호작용하며 <code>[사고(Thought) -&gt; 도구 호출(Action) -&gt; 결과 관찰(Observation)]</code>의 루프를 스스로 반복하는 구조다. 실행할 때마다 거치는 단계 수와 호출하는 도구의 조합이 달라진다. * <strong>적합한 실무 사례:</strong> 원인을 전혀 알 수 없는 신규 시스템 장애 조사처럼, 첫 번째 로그 조회 결과를 확인한 뒤에야 다음에 어떤 서버의 매뉴얼이나 DB를 뒤져야 할지 결정할 수 있는 <strong>개방형 문제(Open-ended problems)</strong>.</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Architecture Blueprint: 결정론적 워크플로우 vs. 자율 에이전트 제어 구조">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Architecture Blueprint: 결정론적 워크플로우 vs.&nbsp;자율 에이전트 제어 구조
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>다음 도식은 엔터프라이즈 환경에서 가장 널리 쓰이는 워크플로우 패턴(체이닝, 라우팅, 오케스트레이터-워커)과 자율 에이전트 루프의 제어 흐름 차이를 비교한 아키텍처 설계도다.</p>
+</div>
+</div>
+<div id="cell-fig-workflow-vs-agent-blueprint" class="cell" data-fig-height="6.4" data-fig-width="10" data-execution_count="2">
+<div class="cell-output cell-output-display">
+<div id="fig-workflow-vs-agent-blueprint" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-workflow-vs-agent-blueprint-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="post02_workflow_vs_agent_files/figure-html/fig-workflow-vs-agent-blueprint-output-1.png" width="1485" height="945" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-workflow-vs-agent-blueprint-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: 사전 정의된 코드 경로를 따르는 워크플로우(상단)와 환경 피드백을 통해 경로를 스스로 결정하는 자율 에이전트(하단)의 제어 구조 비교
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="자율성의-대가-복합-오류compound-error와-비용의-수리적-분석" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="자율성의-대가-복합-오류compound-error와-비용의-수리적-분석"><span class="header-section-number">2.3</span> 자율성의 대가: 복합 오류(Compound Error)와 비용의 수리적 분석</h2>
+<p>많은 개발 조직이 문제의 성격을 따져보지 않고 처음부터 패턴 6(자율 에이전트)을 도입하려다 실패한다. 프린스턴 대학교의 사야시 카푸어 연구팀(Kapoor et al., 2024)은 <em>“AI Agents That Matter”</em> 논문에서 기존의 수많은 에이전트 벤치마크 연구들이 <strong>정확도(Accuracy)만 측정할 뿐, 에이전트가 정답을 찾기 위해 소모한 비용과 반복 추론의 불안정성을 간과하고 있다</strong>고 비판했다. 실제로 여러 벤치마크에서 복잡한 자율 에이전트보다 단순하고 잘 설계된 하드코딩 워크플로우가 훨씬 낮은 비용으로 더 높은 신뢰성을 달성했다.</p>
+<p>자율 에이전트가 실무에서 취약해지는 가장 근본적인 이유는 <strong>복합 오류(Compound Error)</strong>와 <strong>꼬리 지연시간(Tail Latency)</strong>에 있다.</p>
+<p>에이전트가 하나의 과업을 완수하기 위해 총 <span class="math inline">\(k\)</span>번의 단계(도구 선택, 인자 생성, 결과 해석 등)를 거쳐야 하고, 각 단계에서 올바른 판단을 내릴 독립적인 성공 확률을 <span class="math inline">\(p \in (0, 1)\)</span>라고 가정해 보자. 전체 과업이 중간에 길을 잃지 않고 한 번에 완수될 확률 <span class="math inline">\(P(\text{Success})\)</span>는 단계 수 <span class="math inline">\(k\)</span>에 대해 지수적으로 감소한다.</p>
+<p><span class="math display">\[P(\text{Success}) = p^k\]</span></p>
+<p>예를 들어 단일 단계에서 LLM이 올바른 도구를 선택하고 정확한 JSON 인자를 생성할 확률이 <span class="math inline">\(p = 0.95\)</span> (95%)라고 하면, 단건 호출에서는 매우 우수한 모델처럼 보인다. 그러나 3단계로 고정된 워크플로우에서는 최종 성공률이 <span class="math inline">\(0.95^3 \approx 85.7\%\)</span>로 유지되는 반면, 자율 에이전트가 탐색 과정에서 10단계를 거치면 <span class="math inline">\(0.95^{10} \approx 59.9\%\)</span>, 15단계를 거치면 <span class="math inline">\(0.95^{15} \approx 46.3\%\)</span>로 추락한다.</p>
+<p>더욱이 Yao et al.(2024)이 발표한 <span class="math inline">\(\tau\)</span>-bench 연구에 따르면, 엔터프라이즈 환경에서는 에이전트가 어쩌다 한 번 성공하는 것(<span class="math inline">\(\text{pass}@1\)</span>)이 아니라, 동일한 유형의 업무를 <span class="math inline">\(m\)</span>번 반복 실행했을 때 <strong>모든 시행에서 일관되게 성공할 확률(<span class="math inline">\(\text{pass}^m\)</span>)</strong>이 중요하다. 1회 실행 성공률이 <span class="math inline">\(p^k\)</span>일 때 <span class="math inline">\(m\)</span>회 연속으로 정책 위반 없이 성공할 확률은 <span class="math inline">\((p^k)^m = p^{km}\)</span>이 되어 신뢰성이 급격히 붕괴한다.</p>
+<p>또한 비용 측면에서도 자율 에이전트는 매 스텝마다 이전 단계의 행동과 관찰 결과(Observation)를 컨텍스트 윈도우(메시지 히스토리)에 누적하여 재전송한다. 기본 시스템 프롬프트 크기를 <span class="math inline">\(T_{\text{sys}}\)</span>, 매 스텝 추가되는 평균 관찰 토큰을 <span class="math inline">\(T_{\text{obs}}\)</span>라 할 때, <span class="math inline">\(k\)</span> 스텝 실행 시 총 입력 토큰 소모량 <span class="math inline">\(C(k)\)</span>는 선형이 아니라 <strong>이차 함수(<span class="math inline">\(O(k^2)\)</span>)</strong> 형태로 증가한다.</p>
+<p><span class="math display">\[C(k) = \sum_{i=1}^{k} \left( T_{\text{sys}} + i \cdot T_{\text{obs}} \right) = k \cdot T_{\text{sys}} + \frac{k(k+1)}{2} T_{\text{obs}}\]</span></p>
+<p>아래 파이썬 시뮬레이션 코드를 통해 추론 단계 수(<span class="math inline">\(k\)</span>)가 증가할 때 워크플로우와 자율 에이전트의 <strong>단일 성공률, 3회 연속 일관성(<span class="math inline">\(\text{pass}^3\)</span>), 그리고 누적 토큰 비용</strong>이 어떻게 변화하는지 정량적으로 확인해 보자.</p>
+<div id="cell-fig-compound-error-cost" class="cell" data-fig-height="6.8" data-fig-width="9" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. 단계 수(k = 1 ~ 15)에 따른 신뢰성 및 누적 토큰 비용 수리 모델링</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>steps <span class="op">=</span> np.arange(<span class="dv">1</span>, <span class="dv">16</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>step_accuracy <span class="op">=</span> <span class="fl">0.95</span>          <span class="co"># 단일 스텝 성공 확률 (95%)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>base_sys_tokens <span class="op">=</span> <span class="dv">800</span>         <span class="co"># 기본 시스템 프롬프트 및 도구 스키마 토큰 수</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>obs_tokens_per_step <span class="op">=</span> <span class="dv">600</span>     <span class="co"># 매 스텝 누적되는 도구 실행 결과(Observation) 토큰 수</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 1회 성공 확률 (pass@1 = p^k) 및 3회 연속 일관성 지표 (pass^3 = (p^k)^3)</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>pass_at_1 <span class="op">=</span> (step_accuracy <span class="op">**</span> steps) <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>pass_power_3 <span class="op">=</span> ((step_accuracy <span class="op">**</span> steps) <span class="op">**</span> <span class="dv">3</span>) <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 워크플로우(단계별 독립 컨텍스트) vs 에이전트(히스토리 누적 컨텍스트) 토큰 소모량</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>workflow_tokens <span class="op">=</span> steps <span class="op">*</span> (base_sys_tokens <span class="op">+</span> obs_tokens_per_step)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>agent_cumulative_tokens <span class="op">=</span> [</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">sum</span>(base_sys_tokens <span class="op">+</span> i <span class="op">*</span> obs_tokens_per_step <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, k <span class="op">+</span> <span class="dv">1</span>))</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> steps</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>summary_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"실행_단계_수(k)"</span>: [<span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>],</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"아키텍처_영역"</span>: [<span class="st">"고정 워크플로우(3단계)"</span>, <span class="st">"단기 에이전트(5단계)"</span>, <span class="st">"중기 에이전트(10단계)"</span>, <span class="st">"장기 에이전트(15단계)"</span>],</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"1회_성공률_pass@1(%)"</span>: np.<span class="bu">round</span>(pass_at_1[[<span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">9</span>, <span class="dv">14</span>]], <span class="dv">1</span>),</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"3회_연속성공_pass^3(%)"</span>: np.<span class="bu">round</span>(pass_power_3[[<span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">9</span>, <span class="dv">14</span>]], <span class="dv">1</span>),</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"에이전트_누적토큰"</span>: [agent_cumulative_tokens[i] <span class="cf">for</span> i <span class="kw">in</span> [<span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">9</span>, <span class="dv">14</span>]]</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"[단계 수(k) 증가에 따른 신뢰성 및 토큰 비용 시뮬레이션 요약]"</span>)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(summary_df.to_string(index<span class="op">=</span><span class="va">False</span>))</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 고대비 상하 2단 시각화</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">6.8</span>))</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="co"># 상단 그래프: 단계 수 증가에 따른 성공률 감소 곡선</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(steps, pass_at_1, marker<span class="op">=</span><span class="st">"o"</span>, color<span class="op">=</span><span class="st">"#2563eb"</span>, linewidth<span class="op">=</span><span class="fl">2.5</span>, label<span class="op">=</span><span class="st">"1회 실행 성공률 (pass@1, p=0.95)"</span>)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(steps, pass_power_3, marker<span class="op">=</span><span class="st">"s"</span>, color<span class="op">=</span><span class="st">"#dc2626"</span>, linewidth<span class="op">=</span><span class="fl">2.5</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, label<span class="op">=</span><span class="st">"3회 연속 성공 일관성 (pass^3)"</span>)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].axvspan(<span class="dv">1</span>, <span class="dv">4</span>, color<span class="op">=</span><span class="st">"#dbeafe"</span>, alpha<span class="op">=</span><span class="fl">0.45</span>, label<span class="op">=</span><span class="st">"결정론적 워크플로우 권장 구간 (1~4단계)"</span>)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].axhline(<span class="dv">80</span>, color<span class="op">=</span><span class="st">"#64748b"</span>, linestyle<span class="op">=</span><span class="st">":"</span>, linewidth<span class="op">=</span><span class="fl">1.2</span>)</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].text(<span class="fl">11.5</span>, <span class="dv">82</span>, <span class="st">"엔터프라이즈 최소 신뢰성 기준선 (80%)"</span>, fontsize<span class="op">=</span><span class="fl">9.5</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, color<span class="op">=</span><span class="st">"#475569"</span>)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"추론 단계 수(k) 증가에 따른 복합 오류(Compound Error) 누적 현상"</span>, fontsize<span class="op">=</span><span class="dv">13</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, pad<span class="op">=</span><span class="dv">12</span>)</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_xlabel(<span class="st">"실행 단계 수 (Steps)"</span>, fontsize<span class="op">=</span><span class="dv">11</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">"성공 확률 (%)"</span>, fontsize<span class="op">=</span><span class="dv">11</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_xticks(steps)</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylim(<span class="dv">0</span>, <span class="dv">105</span>)</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].grid(<span class="va">True</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend(loc<span class="op">=</span><span class="st">"upper right"</span>, frameon<span class="op">=</span><span class="va">True</span>, facecolor<span class="op">=</span><span class="st">"white"</span>, edgecolor<span class="op">=</span><span class="st">"#cbd5e1"</span>, fontsize<span class="op">=</span><span class="fl">9.5</span>)</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="co"># 하단 그래프: 히스토리 누적에 따른 입력 토큰 비용 증가 (O(k^2))</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(steps, agent_cumulative_tokens, marker<span class="op">=</span><span class="st">"^"</span>, color<span class="op">=</span><span class="st">"#d97706"</span>, linewidth<span class="op">=</span><span class="fl">2.5</span>, label<span class="op">=</span><span class="st">"자율 에이전트 (이전 대화·관찰 히스토리 누적 재전송)"</span>)</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(steps, workflow_tokens, marker<span class="op">=</span><span class="st">"d"</span>, color<span class="op">=</span><span class="st">"#16a34a"</span>, linewidth<span class="op">=</span><span class="fl">2.2</span>, linestyle<span class="op">=</span><span class="st">"-."</span>, label<span class="op">=</span><span class="st">"모듈형 워크플로우 (필요한 요약 컨텍스트만 단계별 전달)"</span>)</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"추론 단계 수(k) 증가에 따른 총 입력 토큰 소모량 비교"</span>, fontsize<span class="op">=</span><span class="dv">13</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, pad<span class="op">=</span><span class="dv">12</span>)</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_xlabel(<span class="st">"실행 단계 수 (Steps)"</span>, fontsize<span class="op">=</span><span class="dv">11</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylabel(<span class="st">"총 입력 토큰 수 (Tokens)"</span>, fontsize<span class="op">=</span><span class="dv">11</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>)</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_xticks(steps)</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].grid(<span class="va">True</span>, linestyle<span class="op">=</span><span class="st">"--"</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend(loc<span class="op">=</span><span class="st">"upper left"</span>, frameon<span class="op">=</span><span class="va">True</span>, facecolor<span class="op">=</span><span class="st">"white"</span>, edgecolor<span class="op">=</span><span class="st">"#cbd5e1"</span>, fontsize<span class="op">=</span><span class="fl">9.5</span>)</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="co"># 10단계 및 15단계 토큰 수치 주석 표시</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k_idx <span class="kw">in</span> [<span class="dv">2</span>, <span class="dv">9</span>, <span class="dv">14</span>]:</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>    k_val <span class="op">=</span> steps[k_idx]</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>    tok_val <span class="op">=</span> agent_cumulative_tokens[k_idx]</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].annotate(<span class="ss">f"</span><span class="sc">{</span>tok_val<span class="sc">:,}</span><span class="ss"> 토큰"</span>, xy<span class="op">=</span>(k_val, tok_val), xytext<span class="op">=</span>(k_val <span class="op">-</span> <span class="fl">0.8</span>, tok_val <span class="op">+</span> <span class="dv">8000</span>),</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>                     fontsize<span class="op">=</span><span class="fl">9.5</span>, fontweight<span class="op">=</span><span class="st">"bold"</span>, color<span class="op">=</span><span class="st">"#b45309"</span>,</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>                     arrowprops<span class="op">=</span><span class="bu">dict</span>(arrowstyle<span class="op">=</span><span class="st">"-&gt;"</span>, color<span class="op">=</span><span class="st">"#d97706"</span>, lw<span class="op">=</span><span class="fl">1.2</span>))</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[단계 수(k) 증가에 따른 신뢰성 및 토큰 비용 시뮬레이션 요약]
+ 실행_단계_수(k)       아키텍처_영역  1회_성공률_pass@1(%)  3회_연속성공_pass^3(%)  에이전트_누적토큰
+          3 고정 워크플로우(3단계)              85.7               63.0       6000
+          5  단기 에이전트(5단계)              77.4               46.3      13000
+         10 중기 에이전트(10단계)              59.9               21.5      41000
+         15 장기 에이전트(15단계)              46.3                9.9      84000</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div id="fig-compound-error-cost" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-compound-error-cost-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="post02_workflow_vs_agent_files/figure-html/fig-compound-error-cost-output-2.png" width="1319" height="1003" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-compound-error-cost-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.2: 추론 단계 수(Steps) 증가에 따른 과업 성공률 및 반복 일관성 하락(상단)과 누적 입력 토큰 소모량의 비선형 증가(하단)
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="시뮬레이션-결과-해석" class="level3" data-number="2.3.1">
+<h3 data-number="2.3.1" class="anchored" data-anchor-id="시뮬레이션-결과-해석"><span class="header-section-number">2.3.1</span> 시뮬레이션 결과 해석</h3>
+<ol type="1">
+<li><strong>신뢰성의 급격한 저하 (상단 그래프):</strong> 단일 스텝 정확도가 95%에 달하더라도, 에이전트가 10단계를 자율 탐색하면 1회 성공률(<code>pass@1</code>)은 <code>59.9%</code>로 떨어지며, 3번 연속 문제없이 수행할 확률(<code>pass^3</code>)은 <strong><code>21.5%</code></strong>까지 하락한다. 반면 실행 경로를 3단계 이내로 압축한 결정론적 워크플로우 구간(파란색 음영)에서는 높은 성공률을 안정적으로 방어할 수 있다.</li>
+<li><strong>히스토리 누적으로 인한 토큰 급증 (하단 그래프):</strong> 워크플로우는 각 단계에 필요한 요약 정보만 정제하여 넘기므로 토큰 사용량이 완만한 선형(<code>Linear</code>)으로 증가한다. 반면 자율 에이전트는 이전 스텝의 모든 도구 실행 결과를 컨텍스트에 계속 쌓아가며 매번 다시 읽어들여야 하므로, 15단계에 이르면 단일 과업 하나에 <strong><code>84,000</code> 토큰</strong> 이상을 소모하게 된다.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="실무-아키텍처-선택을-위한-4단계-의사결정-기준" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="실무-아키텍처-선택을-위한-4단계-의사결정-기준"><span class="header-section-number">2.4</span> 실무 아키텍처 선택을 위한 4단계 의사결정 기준</h2>
+<p>따라서 아키텍트는 <strong>“가장 단순한 해결책부터 시작하고, 결정론적 워크플로우로 해결할 수 없을 때만 자율성을 단계적으로 높인다”</strong>는 원칙을 지켜야 한다(Schluntz &amp; Zhang, 2024). 새로운 요구사항이 주어졌을 때 아키텍처를 결정하는 4가지 핵심 기준은 다음과 같다.</p>
+<ol type="1">
+<li><strong>작업 경로의 결정 가능성 (Procedure Predictability):</strong> 문제를 해결하기 위해 거쳐야 하는 단계와 호출해야 할 도구들을 사전에 화이트보드에 순서도로 그릴 수 있는가? 순서도를 그릴 수 있다면 에이전트가 아니라 <strong>워크플로우(체이닝 + 라우팅)</strong>로 구현해야 한다.</li>
+<li><strong>환경의 불확실성과 동적 피드백 필요성:</strong> 첫 번째 도구를 실행해 보기 전에는 두 번째로 무엇을 해야 할지 전혀 알 수 없는 문제인가? (예: 버그의 원인이 코드 문법 오류인지, DB 연결 타임아웃인지, 외부 API 버전 변경인지 실행 결과를 보며 추적해야 하는 경우) 이 경우에만 <strong>자율 에이전트</strong> 또는 <strong>오케스트레이터-워커</strong> 패턴이 정당화된다.</li>
+<li><strong>오류 허용치와 가역성 (Risk Tolerance &amp; Reversibility):</strong> 잘못된 행동을 했을 때 쉽게 되돌릴 수 있는가(예: 읽기 전용 매뉴얼 검색, 코드 초안 작성), 아니면 치명적인 손실이 발생하는가(예: 고객 계좌 환불 실행, 통신망 라우팅 테이블 변경, 데이터베이스 <code>DROP/UPDATE</code>)? 비가역적 작업은 반드시 결정론적 워크플로우나 <strong>인간 승인(Human-in-the-Loop)</strong> 게이트로 통제해야 한다.</li>
+<li><strong>지연시간 및 예산 상한선 (SLA &amp; Budget Constraints):</strong> 실시간 응답(예: 3초 이내)이 요구되는 서비스에서는 다단계 루프를 도는 에이전트를 사용할 수 없다. 백그라운드에서 비동기(Asynchronous)로 수 분간 실행되어도 무방한 심층 분석 업무에만 자율 에이전트를 배치한다.</li>
+</ol>
+<div class="callout callout-style-default callout-warning callout-titled" title="Eval Lab &amp; Failure Log: 무분별한 자율 에이전트 도입 실패와 하이브리드 리팩토링">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Eval Lab &amp; Failure Log: 무분별한 자율 에이전트 도입 실패와 하이브리드 리팩토링
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>아래 사례는 서버 이상탐지 알람 발생 시 초기 대응 리포트를 생성하는 프로젝트에서, 모든 과정을 단일 자율 에이전트에 위임했다가 발생한 실제 실패 모드와 이를 <strong>‘라우팅 워크플로우 + 제한된 에이전트’</strong> 구조로 리팩토링하여 해결한 실험 기록이다.</p>
+</div>
+</div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">비교 항목</th>
+<th style="text-align: left;">❌ 실패 사례: 모든 알람을 완전 자율 에이전트(ReAct)로 처리</th>
+<th style="text-align: left;">✅ 개선 사례: 결정론적 라우팅 + 3스텝 제한 하이브리드 구조</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>아키텍처 구조</strong></td>
+<td style="text-align: left;">알람 수신 직후 LLM 에이전트에게 8개의 도구(DB 조회, 매뉴얼 검색, 메트릭 계산, 슬랙 발송 등)를 모두 주고 알아서 조사하게 함</td>
+<td style="text-align: left;"><strong>1단계(코드 고정):</strong> SHAP 상위 변수 추출 및 알람 유형 분류<br><strong>2단계(제한된 에이전트):</strong> 미지 장애일 때만 최대 3회 이내 매뉴얼/DB 탐색<br><strong>3단계(코드 고정):</strong> JSON 스키마 검증 후 리포트 발송</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>주요 실패 모드</strong></td>
+<td style="text-align: left;">• <strong>불필요한 탐색(Over-exploration):</strong> 이미 알려진 단순 CPU 과부하 알람에도 DB 테이블을 7번씩 반복 조회함<br>• <strong>무한 루프:</strong> 매뉴얼에 없는 에러 코드가 나오자 검색어만 조금씩 바꿔가며 15회 연속 호출 후 타임아웃 발생</td>
+<td style="text-align: left;">• 알려진 장애 유형(80%)은 에이전트 루프 없이 고정 워크플로우로 즉시 처리<br>• 최대 탐색 횟수(<code>max_steps=3</code>)와 조기 종료 조건을 코드로 강제하여 무한 루프 원천 차단</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>3회 연속 성공률 (<span class="math inline">\(\text{pass}^3\)</span>)</strong></td>
+<td style="text-align: left;"><strong>48.2%</strong> (실행할 때마다 조회하는 테이블과 결론이 달라짐)</td>
+<td style="text-align: left;"><strong>94.6%</strong> (핵심 컨텍스트 수집 경로가 고정되어 일관된 리포트 생성)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>건당 평균 지연시간 / 비용</strong></td>
+<td style="text-align: left;"><strong>18.4초 / $0.14</strong></td>
+<td style="text-align: left;"><strong>3.1초 (83% 단축) / $0.018 (87% 절감)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>실무에서 위 개선 사례처럼 <strong>결정론적 워크플로우의 안정성과 에이전트의 유연성을 결합한 하이브리드 제어 구조</strong>는 다음과 같은 파이썬 의사코드(Pseudocode) 패턴으로 명확히 구현된다.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dataclasses <span class="im">import</span> dataclass</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Literal</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="at">@dataclass</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> AnomalyEvent:</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    event_id: <span class="bu">str</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    anomaly_score: <span class="bu">float</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    top_shap_feature: <span class="bu">str</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    is_known_pattern: <span class="bu">bool</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> handle_anomaly_pipeline(event: AnomalyEvent) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">    [엔터프라이즈 하이브리드 제어 패턴]</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">    전체 뼈대(라우팅, 종료 조건, 포맷 검증)는 결정론적 Python 코드로 통제하고,</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">    사전에 경로를 알 수 없는 '미지 장애 원인 탐색' 구간에만 제한된 에이전트 루프를 허용한다.</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. 결정론적 게이트 (Workflow): 임계치 미달 이벤트는 LLM 호출 없이 즉시 종료</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> event.anomaly_score <span class="op">&lt;</span> <span class="fl">0.75</span>:</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {<span class="st">"status"</span>: <span class="st">"ignored"</span>, <span class="st">"reason"</span>: <span class="st">"Below threshold"</span>}</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. 결정론적 라우팅 (Workflow): 이미 해결 절차가 정립된 패턴은 고정 파이프라인으로 처리</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> event.is_known_pattern:</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        manual_doc <span class="op">=</span> fetch_standard_manual_by_feature(event.top_shap_feature)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        report <span class="op">=</span> generate_fixed_template_report(event, manual_doc)</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> {<span class="st">"status"</span>: <span class="st">"resolved_by_workflow"</span>, <span class="st">"report"</span>: report}</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. 제한된 자율 에이전트 루프 (Bounded Agent): 신규 미지 패턴에 한해 최대 3스텝 탐색 허용</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    max_steps: <span class="bu">int</span> <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    context_history: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> [<span class="ss">f"Initial SHAP cause: </span><span class="sc">{</span>event<span class="sc">.</span>top_shap_feature<span class="sc">}</span><span class="ss">"</span>]</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> step <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, max_steps <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        <span class="co"># LLM이 현재 누적된 단서를 바탕으로 다음 도구 호출 또는 조사 완료 여부를 결정</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        decision: Literal[<span class="st">"search_db"</span>, <span class="st">"search_manual"</span>, <span class="st">"finish"</span>] <span class="op">=</span> llm_decide_next_action(context_history)</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> decision <span class="op">==</span> <span class="st">"finish"</span>:</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> decision <span class="op">==</span> <span class="st">"search_db"</span>:</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>            obs <span class="op">=</span> execute_read_only_sql(event.event_id)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>            context_history.append(<span class="ss">f"Step </span><span class="sc">{</span>step<span class="sc">}</span><span class="ss"> DB Observation: </span><span class="sc">{</span>obs<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> decision <span class="op">==</span> <span class="st">"search_manual"</span>:</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>            obs <span class="op">=</span> execute_hybrid_rag(event.top_shap_feature)</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>            context_history.append(<span class="ss">f"Step </span><span class="sc">{</span>step<span class="sc">}</span><span class="ss"> Manual Observation: </span><span class="sc">{</span>obs<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 4. 결정론적 후처리 (Workflow): 최종 보고서 생성 및 스키마 검증은 다시 코드로 통제</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    final_report <span class="op">=</span> generate_verified_report(event, context_history)</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">"status"</span>: <span class="st">"resolved_by_bounded_agent"</span>, <span class="st">"steps_used"</span>: step, <span class="st">"report"</span>: final_report}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>이 코드가 보여주듯, 훌륭한 에이전트 아키텍처란 모든 코드 제어문을 지우고 LLM에게 전권을 위임하는 것이 아니다. <strong>예측 가능한 뼈대는 전통적인 소프트웨어 엔지니어링과 ML 모델(워크플로우)로 단단하게 고정하고, 오직 유연한 추론이 필수적인 병목 구간에만 상한선이 설정된 에이전트(Bounded Agent)를 배치하는 것</strong>이 엔터프라이즈 복합 AI 시스템의 핵심 설계 원칙이다.</p>
+<p>다음 장에서는 본격적으로 에이전트 내부로 들어가, 전통적인 머신러닝 파이프라인에 익숙한 데이터 사이언티스트의 관점에서 에이전트의 3대 핵심 구성요소인 <strong>계획(Planning), 기억(Memory), 도구 사용(Tool Use)</strong>의 두뇌 구조를 해부한다.</p>
+<div class="callout callout-style-default callout-important callout-titled" title="Production Checklist: 실무 프로젝트 설계 전 핵심 점검표">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Production Checklist: 실무 프로젝트 설계 전 핵심 점검표
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul class="task-list">
+<li><label><input type="checkbox"><strong>워크플로우 우선 검토:</strong> 현재 해결하려는 문제를 프롬프트 체이닝이나 라우팅 같은 고정 워크플로우만으로 80% 이상 해결할 수 있는지 먼저 검토했는가?</label></li>
+<li><label><input type="checkbox"><strong>최대 반복 횟수(<code>max_steps</code>) 강제:</strong> 자율 에이전트 루프를 도입할 경우, 무한 루프와 비용 폭발을 막기 위해 코드 레벨에서 최대 스텝 수(예: 3~5회)와 타임아웃(Timeout)을 강제했는가?</label></li>
+<li><label><input type="checkbox"><strong>권한 분리 및 가역성 통제:</strong> 에이전트가 자율적으로 호출할 수 있는 도구가 ’읽기 전용(Read-only)’으로 제한되어 있는가? 데이터를 수정하거나 외부에 발송하는 비가역적 도구 앞단에 결정론적 검증 게이트나 인간 승인 단계가 존재하는가?</label></li>
+<li><label><input type="checkbox"><strong>반복 일관성(<span class="math inline">\(\text{pass}^k\)</span>) 측정:</strong> 단 한 번의 데모 성공(<code>pass@1</code>)에 만족하지 않고, 동일한 입력을 여러 번 반복 실행했을 때도 에이전트가 일관된 도구 호출 경로와 결론을 유지하는지 검증했는가?</label></li>
+</ul>
+</div>
+</div>
+<hr>
+</section>
+<section id="참고문헌-references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="참고문헌-references">참고문헌 (References)</h2>
+<ol type="1">
+<li>Schluntz, E., &amp; Zhang, B. (2024). <em>Building Effective Agents.</em> Anthropic Engineering Blog.</li>
+<li>Kapoor, S., Stroebl, B., Siegel, Z. S., Nadgir, N., &amp; Narayanan, A. (2024). <em>AI Agents That Matter.</em> arXiv preprint arXiv:2407.01502.</li>
+<li>Yao, S., Shinn, N., Razavi, P., &amp; Narasimhan, K. (2024). <em><span class="math inline">\(\tau\)</span>-bench: A Benchmark for Tool-Agent-User Interaction in Real-World Domains.</em> arXiv preprint arXiv:2406.12045.</li>
+</ol>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part1/post01_why_compound_ai.html" class="pagination-link" aria-label="왜 거대언어모델(LLM) 하나로는 실무 문제를 풀 수 없는가?">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">왜 거대언어모델(LLM) 하나로는 실무 문제를 풀 수 없는가?</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part1/post03_agent_core_architecture.html" class="pagination-link" aria-label="데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jiwoongme/compound-ai-book/edit/main/part1/post02_workflow_vs_agent.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jiwoongme/compound-ai-book/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

@@ -71,7 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../references.html" rel="next">
+<link href="../part1/post02_workflow_vs_agent.html" rel="next">
 <link href="../index.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -200,6 +200,30 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="../part1/post01_why_compound_ai.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">왜 거대언어모델(LLM) 하나로는 실무 문제를 풀 수 없는가?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post02_workflow_vs_agent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post03_agent_core_architecture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">데이터 사이언티스트의 언어로 해부하는 에이전트 코어 아키텍처</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post04_cot_react_reflexion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">추론(Reasoning)과 행동(Acting)의 루프: CoT에서 ReAct, Reflexion까지</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1/post05_tool_calling_and_mcp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">post05_tool_calling_and_mcp.html</span></span></a>
   </div>
 </li>
       </ul>
@@ -450,12 +474,12 @@ window.Quarto = {
 <span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[ML 모델 검증 성능] ROC-AUC: 0.9356 | F1-Score: 0.6478
-[ML 배치 추론 시간] 3,000건 처리: 17.94 ms
+[ML 배치 추론 시간] 3,000건 처리: 20.13 ms
 
                         아키텍처  평균_지연시간_ms  일일_비용_USD
-   1. 전통적 ML 단독 (LightGBM 등)        0.06        2.5
-      2. 단일 LLM 단독 (프롬프트 직결)     1250.00    13200.0
-3. 복합 AI 시스템 (ML 트리거 + 에이전트)       12.56      134.5</code></pre>
+   1. 전통적 ML 단독 (LightGBM 등)       0.067        2.5
+      2. 단일 LLM 단독 (프롬프트 직결)    1250.000    13200.0
+3. 복합 AI 시스템 (ML 트리거 + 에이전트)      12.570      134.5</code></pre>
 </div>
 <div class="cell-output cell-output-display">
 <div id="fig-ml-vs-llm-benchmark" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -1032,8 +1056,8 @@ Figure&nbsp;1.2: 단일 LLM 직결 안티패턴(상단)과 엔터프라이즈 �
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../references.html" class="pagination-link" aria-label="참고문헌 (References)">
-        <span class="nav-page-text">참고문헌 (References)</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part1/post02_workflow_vs_agent.html" class="pagination-link" aria-label="Workflow vs. Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Workflow vs.&nbsp;Agent: 자율성의 수준을 결정하는 아키텍처 의사결정 트리</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
